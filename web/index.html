@@ -346,17 +346,47 @@ async function loadCase(id){
 
 function buildProfileSelect(){
   const ps = $('#profSel');
-  ['default_or','uk_or','cath_lab','mmor_robotic'].forEach(p => ps.append(new Option(p, p)));
+  ['default_or','uk_or','cath_lab','mmor_robotic'].forEach(p => ps.append(new Option(p.replace(/_/g,' '), p)));
   ps.onchange = () => {
-    if (!PI.live){ ps.value = PI.D.profile.id; flash('profile switching needs the local server — run `pi serve`'); return; }
-    rerunWithProfile(ps.value);
+    const p = ps.value;
+    if (p === PI.D.profile.id) return;
+    if (!PI.live){
+      ps.value = PI.D.profile.id;
+      flash('live profile switching needs the local server — try `pi run <file> --profile ' + p + '`');
+      return;
+    }
+    reprofile(p);
   };
 }
-async function rerunWithProfile(p){
-  flash('re-running ' + PI.id + ' with ' + p + '…');
-  const src = PI.D.source;
-  // requires the server to have the original upload; fall back to a message
-  flash('use: pi run <file> --profile ' + p);
+async function reprofile(p){
+  const base = PI.id.split('__')[0];
+  const newId = base + '__' + p;
+  flash('re-running ' + base + ' with the ' + p.replace(/_/g,' ') + ' profile…');
+  try {
+    const fd = new FormData(); fd.append('profile', p);
+    const r = await fetch('/api/cases/' + base + '/reprofile', { method:'POST', body:fd });
+    if (!r.ok){ throw new Error((await r.json()).detail || r.statusText); }
+    await pollCase(newId, p);
+  } catch(e){ flash('could not switch profile: ' + e.message); $('#profSel').value = PI.D.profile.id; }
+}
+async function pollCase(id, profLabel){
+  const started = Date.now();
+  const tick = async () => {
+    const s = await (await fetch('/api/cases/' + id + '/status')).json();
+    if (s.error){ flash('run failed: ' + s.error); return; }
+    if (s.done){
+      PI.cases[id] = null;
+      if (![...$('#caseSel').options].some(o => o.value === id))
+        $('#caseSel').append(new Option(CASE_TITLES[id.split('__')[0]] || id, id));
+      await loadCase(id);
+      flash('now showing the ' + profLabel.replace(/_/g,' ') + ' version — same transcript, different hospital');
+      return;
+    }
+    const done = (s.logged_agents || []).length;
+    $('#hint').textContent = 'reconstructing with ' + profLabel.replace(/_/g,' ') + ' profile … ' + done + '/10 stages';
+    if (Date.now() - started < 600000) setTimeout(tick, 2500);
+  };
+  tick();
 }
 function flash(msg){ const h = $('#hint'); h.textContent = msg; setTimeout(() => h.textContent = h.dataset.def, 3200); }
 

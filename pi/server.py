@@ -114,6 +114,21 @@ def get_status(case_id: str):
     return base
 
 
+@app.post("/api/cases/{case_id}/reprofile")
+def reprofile(case_id: str, profile: str = Form(...)):
+    if profile not in available():
+        raise HTTPException(400, f"unknown profile; have {available()}")
+    try:
+        src = CaseFile.load(case_id).source_path
+    except FileNotFoundError:
+        raise HTTPException(404, case_id)
+    if not src or not Path(src).exists():
+        raise HTTPException(409, "original source file is no longer on disk")
+    new_id = f"{case_id.split('__')[0]}__{profile}"
+    _run_in_thread(new_id, Path(src), profile)
+    return {"case_id": new_id}
+
+
 @app.post("/api/cases")
 async def create_case(file: UploadFile, profile: str = Form("default_or"), case_id: str = Form(None)):
     if profile not in available():
@@ -136,6 +151,12 @@ def profiles():
 def index():
     html = (WEB_DIR / "index.html").read_text()
     return html.replace("__BUNDLE__", "{}")  # live mode pulls cases from the API
+
+
+@app.get("/demo", response_class=HTMLResponse)
+def demo():
+    p = WEB_DIR / "standalone.html"
+    return p.read_text() if p.exists() else index()
 
 
 def serve(host: str = "127.0.0.1", port: int = 8000) -> None:

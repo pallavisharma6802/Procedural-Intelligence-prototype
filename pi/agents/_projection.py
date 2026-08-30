@@ -48,8 +48,17 @@ class ProjectionAgent(Agent):
         return self.build_system(active_profile())
 
     async def run(self, cf: CaseFile) -> CaseFile:
-        final = cf.final_state()
+        final = cf.final_state() or CaseState(as_of_s=0.0)
         tbi = {t.id: t for t in cf.turns}
+        if not cf.events:
+            cf.drafts[self.kind] = Draft(
+                kind=self.kind,
+                text=f"[no {self.kind}: the pipeline extracted 0 events from this recording — "
+                "the transcript may be too short, too noisy, or not clinical]",
+                unsupported_claims=["no events extracted"],
+            )
+            cf.log(self.name, "skipped — 0 events")
+            return cf
         ctx = cf.context.model_dump(exclude_none=True, exclude={"evidence_turn_ids"}) if cf.context else {}
         user = (
             f"CASE CONTEXT:\n{json.dumps(ctx, indent=2) or '{}'}\n\n"

@@ -58,6 +58,14 @@ def profiles():
 
 
 @app.command()
+def serve(host: str = "127.0.0.1", port: int = 8000):
+    """Run the web UI + API."""
+    from .server import serve as _serve
+
+    _serve(host, port)
+
+
+@app.command()
 def stage(name: str, case_id: str, profile: str = typer.Option(None, "--profile", "-p")):
     """Re-run a single agent (or 'understand'/'projections') on an existing run."""
     cf = CaseFile.load(case_id)

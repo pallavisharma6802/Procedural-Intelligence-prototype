@@ -55,7 +55,7 @@ class StateReducerAgent(Agent):
             terminal=prof.phases[-1],
         )
         state = CaseState(as_of_s=0.0, phase=pm.order[0])
-        snapshots: list[CaseState] = []
+        snapshots: list[CaseState] = [state]  # always at least the initial empty state
         for ev in sorted(cf.events, key=lambda e: e.t_start_s):
             state = _apply(state, ev, pm)
             snapshots.append(state)

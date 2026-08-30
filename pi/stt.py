@@ -35,13 +35,23 @@ def is_audio(path: str | Path) -> bool:
     return Path(path).suffix.lower() in AUDIO_EXT
 
 
+# Whisper's stock hallucinations over silence / music
+_JUNK = {"you", "thank you", "thanks for watching", "bye", ".", "。", "you.", "thank you.",
+         "please subscribe", "the end", "okay", "ok", "so", "um", "uh"}
+
+
+def _is_junk(text: str) -> bool:
+    t = text.strip().lower().strip(".!? ")
+    return not t or t in _JUNK or (len(set(t.split())) == 1 and len(t.split()) > 1)
+
+
 def transcribe(path: str | Path) -> list[Turn]:
     path = Path(path)
     backend = os.environ.get("PI_STT", "groq")
     fn = {"groq": _groq, "assemblyai": _assemblyai, "deepgram": _deepgram, "local": _local}.get(backend)
     if fn is None:
         raise ValueError(f"unknown PI_STT={backend!r}")
-    turns = [t for t in fn(path) if t.text.strip()]
+    turns = [t for t in fn(path) if t.text.strip() and not _is_junk(t.text)]
     for i, t in enumerate(turns):  # renumber ids consistently
         t.id = f"t{i:04d}"
         t.text = " ".join(t.text.split())
@@ -75,9 +85,11 @@ def _groq(path: Path) -> list[Turn]:
 
 
 def _groq_one(path: Path, key: str, model: str, offset: float):
+    # PI_WHISPER_TASK=translate -> force English output for non-English audio (e.g. MM-OR is German)
+    endpoint = "translations" if os.environ.get("PI_WHISPER_TASK") == "translate" else "transcriptions"
     with open(path, "rb") as fh:
         r = _post_with_retry(
-            "https://api.groq.com/openai/v1/audio/transcriptions",
+            f"https://api.groq.com/openai/v1/audio/{endpoint}",
             headers={"Authorization": f"Bearer {key}"},
             data={"model": model, "response_format": "verbose_json", "temperature": "0"},
             files={"file": (path.name, fh, "application/octet-stream")},

@@ -1,0 +1,6 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    { "name": "pi-web", "runtimeExecutable": "./.venv/bin/python", "runtimeArgs": ["-W","ignore","-m","pi.cli","serve","--port","8770"], "port": 8770 }
+  ]
+}

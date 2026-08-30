@@ -61,22 +61,32 @@ def _run_in_thread(case_id: str, source: Path, profile: str) -> None:
     threading.Thread(target=lambda: asyncio.run(_go()), daemon=True).start()
 
 
+# cases shown first, in this order, when present
+_FEATURED = ["case01_lapchole", "case04_cath_pci", "case01_uk", "case03_trauma_exlap",
+             "mmor_007_TKA", "mmor_007_audio", "case02_tka_uneventful"]
+
+
 @app.get("/api/cases")
 def list_cases():
     out = []
     for d in sorted(RUNS_DIR.glob("*/casefile.json")):
+        if d.parent.name.startswith("_"):
+            continue
         try:
             cf = json.loads(d.read_text())
         except Exception:  # noqa: BLE001
             continue
+        cid = cf.get("case_id", d.parent.name)
         out.append({
-            "case_id": cf.get("case_id", d.parent.name),
+            "case_id": cid,
             "profile": cf.get("profile_id"),
             "source": (cf.get("source_path") or "").split("/")[-1],
             "n_events": len(cf.get("events", [])),
-            "mtime": d.stat().st_mtime,
+            "n_turns": len(cf.get("turns", [])),
+            "featured": cid in _FEATURED,
         })
-    return sorted(out, key=lambda x: -x["mtime"])
+    rank = {c: i for i, c in enumerate(_FEATURED)}
+    return sorted(out, key=lambda x: (rank.get(x["case_id"], 99), -x["n_events"]))
 
 
 @app.get("/api/cases/{case_id}")

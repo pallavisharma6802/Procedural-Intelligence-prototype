@@ -204,7 +204,7 @@ select{padding-right:26px;background-image:linear-gradient(45deg,transparent 50%
     <select id="profSel" class="sel" aria-label="Site profile"></select>
     <div class="spacer"></div>
     <span class="lbl" id="srcInfo"></span>
-    <button class="iconbtn" id="replayBtn" title="Replay reconstruction" aria-label="Replay">&#9654;</button>
+    <button class="pill" id="replayBtn" title="Replay the reconstruction" aria-label="Replay reconstruction">&#8635;&nbsp;replay</button>
     <button class="iconbtn" id="themeBtn" title="Toggle theme" aria-label="Toggle theme">&#9681;</button>
   </header>
 
@@ -267,21 +267,42 @@ async function boot(){
     if (r.ok) live = await r.json();
   } catch(e){}
   PI.live = live.length > 0;
+  const sel = $('#caseSel');
+  let ids;
   if (PI.live){
-    for (const c of live) PI.cases[c.case_id] = null; // lazy
+    for (const c of live) PI.cases[c.case_id] = null;
+    ids = live.map(c => c.case_id);
+    live.forEach(c => sel.append(new Option(caseLabel(c), c.case_id)));
   } else {
     PI.cases = bundle;
+    ids = Object.keys(bundle);
+    ids.forEach(id => {
+      const d = bundle[id];
+      sel.append(new Option(caseLabel({ case_id: id, profile: d.profile.id, source: d.source, n_events: d.events.length }), id));
+    });
   }
-  const ids = Object.keys(PI.cases);
   if (!ids.length){ $('#loading').textContent = 'no cases'; return; }
   buildProfileSelect();
-  const sel = $('#caseSel');
-  ids.forEach(id => sel.append(new Option(id, id)));
   sel.onchange = () => loadCase(sel.value);
   await loadCase(ids[0]);
   $('#loading').hidden = true; $('#app').hidden = false;
   wire();
   replay();
+}
+
+const CASE_TITLES = {
+  case01_lapchole: 'Lap chole → open',
+  case01_uk: 'Lap chole → open (NHS)',
+  case03_trauma_exlap: 'Trauma laparotomy',
+  case04_cath_pci: 'Coronary PCI',
+  case02_tka_uneventful: 'Routine knee replacement',
+  mmor_007_TKA: 'MM-OR knee (transcript)',
+  mmor_007_audio: 'MM-OR knee (raw audio)',
+};
+function caseLabel(c){
+  const nm = CASE_TITLES[c.case_id] || c.case_id;
+  const src = /audio|\.mp3|\.m4a|\.wav/i.test(c.source || '') ? 'audio' : 'transcript';
+  return `${nm}  ·  ${src}`;
 }
 
 async function loadCase(id){

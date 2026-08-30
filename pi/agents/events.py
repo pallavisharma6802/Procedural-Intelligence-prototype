@@ -218,6 +218,13 @@ def _slug(*vals) -> str:
     return " ".join("".join(ch if ch.isalnum() else " " for ch in raw).split())
 
 
+def _num(v):
+    try:
+        return float(v)
+    except (TypeError, ValueError):
+        return None
+
+
 def _dedupe_key(e: ProceduralEvent) -> str:
     """A loose identity for an event, so near-duplicate phrasings collapse."""
     p = e.payload or {}
@@ -249,7 +256,12 @@ def _dedupe(events: list[ProceduralEvent]) -> list[ProceduralEvent]:
         for k in kept:
             if k.type != e.type:
                 continue
-            window = 240 if (e.type in _FUZZY or e.type == EventType.medication_given) else 45
+            if e.type == EventType.transfusion:
+                window = 1e9  # one row per product; running totals collapse
+            elif e.type in _FUZZY or e.type == EventType.medication_given:
+                window = 240
+            else:
+                window = 45
             if abs(k.t_start_s - e.t_start_s) > window:
                 continue
             if _dedupe_key(k) == ekey:
@@ -258,7 +270,11 @@ def _dedupe(events: list[ProceduralEvent]) -> list[ProceduralEvent]:
         if dup:
             dup.evidence_turn_ids = sorted(set(dup.evidence_turn_ids) | set(e.evidence_turn_ids))
             dup.confidence = max(dup.confidence, e.confidence)
-            if len(json.dumps(e.payload)) > len(json.dumps(dup.payload)):
+            if e.type == EventType.transfusion:
+                du, eu = _num(dup.payload.get("units")), _num(e.payload.get("units"))
+                if eu is not None and (du is None or eu > du):
+                    dup.payload, dup.t_start_s = e.payload, e.t_start_s
+            elif len(json.dumps(e.payload)) > len(json.dumps(dup.payload)):
                 dup.payload = e.payload  # keep the more detailed description
         else:
             kept.append(e)

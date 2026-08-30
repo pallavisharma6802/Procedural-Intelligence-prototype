@@ -77,11 +77,14 @@ def list_cases():
         except Exception:  # noqa: BLE001
             continue
         cid = cf.get("case_id", d.parent.name)
+        n_ev = len(cf.get("events", []))
+        if cid not in _FEATURED and (n_ev < 3 or cid in {"or_clip"}):
+            continue
         out.append({
             "case_id": cid,
             "profile": cf.get("profile_id"),
             "source": (cf.get("source_path") or "").split("/")[-1],
-            "n_events": len(cf.get("events", [])),
+            "n_events": n_ev,
             "n_turns": len(cf.get("turns", [])),
             "featured": cid in _FEATURED,
         })

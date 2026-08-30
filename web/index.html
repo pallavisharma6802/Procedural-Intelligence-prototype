@@ -113,13 +113,14 @@ select{padding-right:26px;background-image:linear-gradient(45deg,transparent 50%
 .turn .body .tx{color:var(--ink)}
 
 /* ---- timeline ---- */
-.transport{display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid var(--line);flex:none}
-.play{width:30px;height:30px;border-radius:50%;border:1px solid var(--line-strong);display:grid;place-items:center;color:var(--ink);background:var(--surface-2)}
+.transport{display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid var(--line);flex:none}
+.play{width:30px;height:30px;border-radius:50%;border:1px solid var(--line-strong);display:grid;place-items:center;color:var(--ink);background:var(--surface-2);font-size:11px}
 .play:hover{border-color:var(--accent);color:var(--accent)}
-.scrub{flex:1;height:4px;border-radius:2px;background:var(--line);position:relative;cursor:pointer}
-.scrub .fill{position:absolute;left:0;top:0;bottom:0;background:var(--accent);border-radius:2px}
-.scrub .knob{position:absolute;top:50%;width:12px;height:12px;border-radius:50%;background:var(--accent);border:2px solid var(--surface);transform:translate(-50%,-50%)}
-.tclock{font-family:var(--mono);font-size:11px;color:var(--ink-soft);min-width:58px;text-align:right}
+.scrub{flex:1;height:6px;border-radius:3px;background:var(--line);position:relative;cursor:pointer}
+.scrub .fill{position:absolute;left:0;top:0;bottom:0;background:var(--accent);border-radius:3px}
+.scrub .knob{position:absolute;top:50%;width:13px;height:13px;border-radius:50%;background:var(--accent);border:2px solid var(--surface);transform:translate(-50%,-50%);box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.tclock{font-family:var(--mono);font-size:11px;color:var(--ink-soft);min-width:76px;text-align:right}
+.tclock b{color:var(--ink)}
 .tl-wrap{flex:1;overflow-y:auto;position:relative}
 .tl{padding:6px 14px 80px;display:flex;flex-direction:column}
 .tl-phase{
@@ -190,10 +191,25 @@ select{padding-right:26px;background-image:linear-gradient(45deg,transparent 50%
 .doc .flags li{margin-left:16px}
 .doc.empty{color:var(--ink-faint);font-family:var(--mono);font-size:12px;font-style:normal}
 
-.loading{position:fixed;inset:0;background:var(--ground);display:grid;place-items:center;font-family:var(--mono);font-size:12px;color:var(--ink-soft);z-index:50}
+.loading{position:fixed;inset:0;background:var(--ground);display:grid;place-items:center;font-family:var(--mono);font-size:12px;color:var(--ink-soft);z-index:50;letter-spacing:.08em}
+.loading::after{content:"";position:absolute;bottom:0;left:0;height:2px;background:var(--accent);width:0;animation:load 1.4s ease-out forwards}
+@keyframes load{to{width:100%}}
+.app{opacity:0}
+.app.in{opacity:1;transition:opacity .4s ease}
 .hint{padding:7px 14px;font-family:var(--mono);font-size:10px;color:var(--ink-faint);border-top:1px solid var(--line);background:var(--surface);flex:none;letter-spacing:.02em}
-@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
-@media (max-width:1100px){.cols{grid-template-columns:1fr}.col{border-right:none;border-bottom:1px solid var(--line);max-height:70vh}}
+.hint kbd{font-family:var(--mono);background:var(--surface-2);border:1px solid var(--line);border-radius:3px;padding:0 4px;color:var(--ink-soft)}
+@keyframes evpulse{0%{box-shadow:0 0 0 0 var(--accent-line)}70%{box-shadow:0 0 0 6px transparent}100%{box-shadow:0 0 0 0 transparent}}
+.ev.hot .node{animation:evpulse 1s ease-out}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}.app{opacity:1}}
+@media (max-width:1080px){
+  body{overflow:auto}
+  .app{height:auto;min-height:100vh}
+  .cols{grid-template-columns:1fr}
+  .col{border-right:none;border-bottom:1px solid var(--line)}
+  .col-body{max-height:64vh}
+  .tl-wrap{max-height:70vh}
+  .docs{min-height:60vh}
+}
 </style>
 </head>
 <body>
@@ -241,7 +257,7 @@ select{padding-right:26px;background-image:linear-gradient(45deg,transparent 50%
       </div>
     </section>
   </div>
-  <div class="hint" id="hint">Hover an event to trace it to the transcript &amp; documents &nbsp;&middot;&nbsp; drag the playhead to replay the case state</div>
+  <div class="hint" id="hint">Hover any event, state chip, or <span style="border-bottom:1px solid var(--accent-line)">linked phrase</span> to trace it across all three columns &nbsp;&middot;&nbsp; <kbd>space</kbd> play &nbsp; <kbd>r</kbd> replay &nbsp;&middot;&nbsp; drag the playhead to rebuild the case state at any moment</div>
 </div>
 <div class="loading" id="loading">reconstructing&hellip;</div>
 
@@ -285,9 +301,11 @@ async function boot(){
   buildProfileSelect();
   sel.onchange = () => loadCase(sel.value);
   await loadCase(ids[0]);
-  $('#loading').hidden = true; $('#app').hidden = false;
   wire();
-  replay();
+  $('#loading').hidden = true;
+  $('#app').hidden = false;
+  requestAnimationFrame(() => $('#app').classList.add('in'));
+  setTimeout(replay, 350);
 }
 
 const CASE_TITLES = {
@@ -306,16 +324,19 @@ function caseLabel(c){
 }
 
 async function loadCase(id){
-  PI.id = id;
   let D = PI.cases[id];
   if (!D){
-    const r = await fetch('/api/cases/' + id);
-    D = await r.json();
-    PI.cases[id] = D;
+    try {
+      const r = await fetch('/api/cases/' + id);
+      D = r.ok ? await r.json() : null;
+    } catch(e){ D = null; }
+    if (D && D.events) PI.cases[id] = D;
   }
-  PI.D = D;
+  if (!D || !D.events){ flash('could not load ' + id); return; }
+  PI.id = id; PI.D = D;
   PI.dur = Math.max(1, ...D.events.map(e => e.t_start_s), ...D.turns.map(t => t.end_s)) + 20;
-  PI.playT = 1e9; PI.tab = D.drafts.handoff ? 'handoff' : Object.keys(D.drafts)[0];
+  PI.playT = 1e9;
+  PI.tab = (D.drafts && D.drafts.handoff) ? 'handoff' : Object.keys(D.drafts || {})[0];
   PI.roleOff.clear();
   $('#caseSel').value = id;
   $('#profSel').value = D.profile.id;
@@ -617,7 +638,7 @@ function syncPlay(){
   const pct = Math.min(100, PI.playT / PI.dur * 100);
   $('#scrubFill').style.width = pct + '%';
   $('#scrubKnob').style.left = pct + '%';
-  $('#transClock').textContent = scrubbed ? clock(PI.playT) : clock(PI.dur);
+  $('#transClock').innerHTML = scrubbed ? `<b>${clock(PI.playT)}</b> / ${clock(PI.dur)}` : clock(PI.dur);
   document.querySelectorAll('.ev').forEach(r => {
     const e = PI.D.events.find(x => x.id === r.dataset.id);
     r.classList.toggle('future', e && e.t_start_s > PI.playT);
@@ -639,12 +660,18 @@ function paintPlaying(force){
   if (force || now - _lastTlPaint > 160){
     _lastTlPaint = now;
     renderTimeline();
-    // follow the case in the transcript
     if (!PI.hotTurn.size){
+      // follow the case in both the transcript and the timeline
       let best = null;
       for (const t of PI.D.turns){ if (t.start_s <= PI.playT + 2) best = t; else break; }
       const row = best && document.querySelector(`.turn[data-id="${best.id}"]`);
       if (row) row.scrollIntoView({ block:'center' });
+      const nowMark = document.querySelector('.tl-now');
+      if (nowMark) nowMark.scrollIntoView({ block:'center' });
+      else if (PI.playT >= PI.dur - 1){
+        const last = document.querySelector('.ev:last-of-type');
+        if (last) last.scrollIntoView({ block:'center' });
+      }
     }
   }
 }

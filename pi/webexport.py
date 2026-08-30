@@ -18,19 +18,25 @@ _FACT_FIELDS = ["ebl_ml", "meds", "implants", "drains", "lines", "transfusion_to
                 "counts", "converted", "disposition", "complications", "phase"]
 
 
-def _sentences(text: str) -> list[tuple[int, int, str]]:
-    out, i = [], 0
-    for chunk in re.split(r"(?<=[.!?])\s+|\n+", text):
-        chunk = chunk.strip()
-        if not chunk:
-            i += 1
-            continue
-        start = text.find(chunk, i)
-        if start < 0:
-            start = i
-        out.append((start, start + len(chunk), chunk))
-        i = start + len(chunk)
-    return out
+def _phrase_span(text: str, at: int, needle_len: int) -> tuple[int, int]:
+    """Expand [at, at+needle_len) to nearby word boundaries for a readable highlight."""
+    s = at
+    while s > 0 and text[s - 1] not in " \n\t":
+        s -= 1
+    while s < at and text[s] in "([\"'*":
+        s += 1
+    e = at + needle_len
+    _UNITS = {"ml", "l", "iv", "im", "g", "mg", "mcg", "cc", "units", "unit", "french", "fr",
+              "correct", "incorrect", "mmhg", "bpm"}
+    while e < len(text) and text[e] == " ":
+        nxt = text[e + 1:].split(" ", 1)[0].strip(".,;:)")
+        if nxt.lower() in _UNITS:
+            e += 1 + len(text[e + 1:].split(" ", 1)[0])
+        else:
+            break
+    while e > s and text[e - 1] in " .,;:)":
+        e -= 1
+    return s, e
 
 
 def _find_events(events: list, etype: str, match: str) -> list[str]:
@@ -76,8 +82,10 @@ def _needles(state: dict, events: list) -> list[tuple[str, list[str], str, list[
         dest = str(state["disposition"]).split()[0].lower()
         n.append(("disposition", [dest], f"disposition: {state['disposition']}",
                   [e["id"] for e in events if e["type"] == "disposition"]))
+    _STOP = {"requiring", "resolved", "management", "managed", "during", "initial", "selecting",
+             "correct", "unable", "obtain", "attempt", "without", "further", "possible"}
     for c in state.get("complications", []):
-        words = re.findall(r"[a-z]{6,}", c.get("description", "").lower())[:2]
+        words = [w for w in re.findall(r"[a-z]{6,}", c.get("description", "").lower()) if w not in _STOP][:1]
         if words:
             eids = _find_events(events, "complication", words[0])
             n.append(("complications", words, f"complication: {c['description'][:60]}", eids))
@@ -86,18 +94,32 @@ def _needles(state: dict, events: list) -> list[tuple[str, list[str], str, list[
 
 def _draft_links(text: str, state: dict, events: list, events_by_id: dict) -> list[dict[str, Any]]:
     prov = state.get("provenance", {})
-    links: list[dict[str, Any]] = []
-    for s0, s1, sent in _sentences(text):
-        sl = sent.lower()
-        for field, needles, label, spec in _needles(state, events):
-            if any(nd and nd in sl for nd in needles):
-                eids = spec or prov.get(field, [])
-                tids = sorted({t for e in eids for t in events_by_id.get(e, {}).get("evidence_turn_ids", [])})
-                if eids or tids:
-                    links.append({"start": s0, "end": s1, "field": field, "label": label,
-                                  "event_ids": eids, "turn_ids": tids})
-                break
-    return links
+    low = text.lower()
+    raw: list[dict[str, Any]] = []
+    for field, needles, label, spec in _needles(state, events):
+        eids = spec or prov.get(field, [])
+        tids = sorted({t for e in eids for t in events_by_id.get(e, {}).get("evidence_turn_ids", [])})
+        if not (eids or tids):
+            continue
+        for nd in needles:
+            nd = (nd or "").strip()
+            if len(nd) < 3:
+                continue
+            i = low.find(nd)
+            while i != -1:
+                if i < 3 or not low[i - 1].isalnum():  # word-ish start
+                    s, e = _phrase_span(text, i, len(nd))
+                    raw.append({"start": s, "end": e, "field": field, "label": label,
+                                "event_ids": eids, "turn_ids": tids})
+                i = low.find(nd, i + len(nd))
+    # de-overlap: keep the first, drop anything that intersects it
+    raw.sort(key=lambda l: (l["start"], -(l["end"] - l["start"])))
+    out: list[dict[str, Any]] = []
+    for lk in raw:
+        if out and lk["start"] < out[-1]["end"]:
+            continue
+        out.append(lk)
+    return out
 
 
 def export_case(cf: CaseFile) -> dict[str, Any]:

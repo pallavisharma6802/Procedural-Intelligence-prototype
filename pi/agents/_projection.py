@@ -23,7 +23,8 @@ def timeline_digest(events: list[ProceduralEvent], turns_by_id: dict) -> str:
         ev_txt = "; ".join(turns_by_id[i].text for i in e.evidence_turn_ids if i in turns_by_id)
         if len(ev_txt) > 140:
             ev_txt = ev_txt[:137] + "..."
-        lines.append(f"[{e.clock}] {e.type.value} {json.dumps(e.payload)}  <- {ev_txt}")
+        who = f" (by {e.by_role})" if e.by_role else ""
+        lines.append(f"[{e.clock}] {e.type.value}{who} {json.dumps(e.payload)}  <- {ev_txt}")
     return "\n".join(lines)
 
 

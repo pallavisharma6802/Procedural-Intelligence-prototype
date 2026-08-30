@@ -1,13 +1,13 @@
 """LangGraph orchestration of the agent pipeline.
 
-    ingest → context → extract → reduce → handoff → opnote → family → critic_check
-                                                                        │
-                                              ┌── flagged & round 0 ────┤
-                                              ▼                         │
-                                        critic_revise ──────────────────┘
-                                              │ (else)
-                                              ▼
-                                        critic_finalize → END
+    ingest → roles → context → extract → reduce → handoff → opnote → family → critic_check
+                                                                                │
+                                                      ┌── flagged & round 0 ────┤
+                                                      ▼                         │
+                                                critic_revise ──────────────────┘
+                                                      │ (else)
+                                                      ▼
+                                                critic_finalize → END
 
 The pipeline is mostly linear (one writer per super-step lets us pass the CaseFile
 through a single channel). The one real branch is the critic's check→revise→re-check
@@ -32,6 +32,7 @@ from .agents import (
     FamilyAgent,
     HandoffAgent,
     OpNoteAgent,
+    RolesAgent,
     StateReducerAgent,
     TranscriptAgent,
 )
@@ -65,6 +66,7 @@ def _agents():
     critic.generators = projections
     return {
         "transcript": TranscriptAgent(),
+        "roles": RolesAgent(),
         "context": ContextAgent(),
         "events": EventAgent(),
         "state": StateReducerAgent(),
@@ -93,6 +95,7 @@ def build_graph():
     g = StateGraph(PIState)
 
     g.add_node("ingest", _node("transcript"))
+    g.add_node("roles", _node("roles"))
     g.add_node("context", _node("context"))
     g.add_node("extract", _node("events"))
     g.add_node("reduce", _node("state"))
@@ -125,7 +128,8 @@ def build_graph():
     g.add_node("critic_finalize", critic_finalize)
 
     g.add_edge(START, "ingest")
-    g.add_edge("ingest", "context")
+    g.add_edge("ingest", "roles")
+    g.add_edge("roles", "context")
     g.add_edge("context", "extract")
     g.add_edge("extract", "reduce")
     g.add_edge("reduce", "handoff")

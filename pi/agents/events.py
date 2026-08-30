@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+from collections import Counter
 
 from ..casefile import CaseFile
 from ..llm import complete_json, info
@@ -117,9 +118,19 @@ def _windows(turns: list[Turn]) -> list[list[Turn]]:
 
 
 def _fmt(turns: list[Turn]) -> str:
-    return "\n".join(
-        f'{t.id} [{t.clock}] {t.speaker + ": " if t.speaker else ""}{t.text}' for t in turns
-    )
+    def tag(t: Turn) -> str:
+        who = t.role or t.speaker
+        return f"{who}: " if who else ""
+
+    return "\n".join(f"{t.id} [{t.clock}] {tag(t)}{t.text}" for t in turns)
+
+
+def _attribute_roles(events, turns) -> None:
+    by_id = {t.id: t for t in turns}
+    for e in events:
+        roles = [by_id[i].role for i in e.evidence_turn_ids if i in by_id and by_id[i].role]
+        if roles:
+            e.by_role = Counter(roles).most_common(1)[0][0]
 
 
 class EventAgent(Agent):
@@ -145,6 +156,7 @@ class EventAgent(Agent):
         results = await asyncio.gather(*jobs)
         raw = [e for batch in results for e in batch]
         cf.events = _dedupe(raw)
+        _attribute_roles(cf.events, cf.turns)
         cf.log(
             self.name,
             f"{info()}: {len(wins)} windows + {len(sweep_chunks)} sweep -> {len(raw)} raw -> "

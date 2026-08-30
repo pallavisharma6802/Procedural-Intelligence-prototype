@@ -13,15 +13,28 @@ def _sec_to_clock(s: float) -> str:
     return f"{s // 3600:02d}:{(s % 3600) // 60:02d}:{s % 60:02d}"
 
 
+# canonical clinical roles a speaker can be mapped to (setting-independent superset)
+ROLES = [
+    "surgeon",
+    "assistant",
+    "anesthesia",
+    "circulating_nurse",
+    "scrub_nurse",
+    "perfusionist",
+    "other",
+]
+
+
 class Turn(BaseModel):
     """One utterance / caption cue."""
 
     id: str
     start_s: float
     end_s: float
-    speaker: Optional[str] = None
+    speaker: Optional[str] = None  # raw diarization label ("A", "SPEAKER_01", "SURGEON")
+    role: Optional[str] = None  # canonical clinical role (see ROLES)
     text: str
-    source: str = "srt"  # srt | whisper
+    source: str = "srt"  # srt | whisper | assemblyai | deepgram
 
     @property
     def clock(self) -> str:
@@ -55,6 +68,7 @@ class ProceduralEvent(BaseModel):
     type: EventType
     payload: dict[str, Any] = Field(default_factory=dict)
     evidence_turn_ids: list[str] = Field(default_factory=list)
+    by_role: Optional[str] = None  # dominant speaker role across the evidence turns
     confidence: float = 0.5
     extractor: str = "llm"  # llm | rule | manual
 

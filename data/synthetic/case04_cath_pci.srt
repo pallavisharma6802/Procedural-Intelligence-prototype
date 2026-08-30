@@ -1,0 +1,63 @@
+1
+00:00:14,000 --> 00:00:22,000
+NURSE: Patient is a 61-year-old with an NSTEMI, coming for coronary angiography and possible PCI.
+
+2
+00:01:30,000 --> 00:01:38,000
+CARDIOLOGIST: Time out. Correct patient, coronary angiogram plus intervention, consent signed, allergies none.
+
+3
+00:02:05,000 --> 00:02:12,000
+CARDIOLOGIST: Giving 2 milligrams of midazolam and 50 micrograms of fentanyl for sedation. Patient comfortable.
+
+4
+00:03:40,000 --> 00:03:50,000
+CARDIOLOGIST: Right radial access. 6 French sheath is in. Radial cocktail given, verapamil and heparin.
+
+5
+00:06:20,000 --> 00:06:30,000
+CARDIOLOGIST: Running the diagnostic pictures. Left system first. There is a 90 percent stenosis in the mid LAD.
+
+6
+00:09:10,000 --> 00:09:18,000
+CARDIOLOGIST: Right coronary is clean. LAD is the culprit. We'll proceed to intervention on the mid LAD.
+
+7
+00:11:00,000 --> 00:11:08,000
+CARDIOLOGIST: Wire is across the lesion. Pre-dilating with a 2.5 balloon.
+
+8
+00:13:45,000 --> 00:13:55,000
+CARDIOLOGIST: The patient is having some chest pain and the pressure dropped to 95 systolic during the balloon inflation. Deflating now.
+
+9
+00:14:30,000 --> 00:14:38,000
+CARDIOLOGIST: Pressure recovered to 120. Pain settling. That was transient balloon-occlusion ischemia, expected.
+
+10
+00:16:20,000 --> 00:16:30,000
+CARDIOLOGIST: Deploying a 3.0 by 18 millimeter drug-eluting stent in the mid LAD. Good angiographic result, TIMI 3 flow.
+
+11
+00:19:00,000 --> 00:19:08,000
+CARDIOLOGIST: Post-dilating with a 3.5 non-compliant balloon. No dissection, no residual stenosis.
+
+12
+00:21:30,000 --> 00:21:40,000
+CARDIOLOGIST: Total contrast used is about 140 mils. Fluoroscopy time 12 minutes. Blood loss minimal.
+
+13
+00:23:00,000 --> 00:23:08,000
+CARDIOLOGIST: Sheath is out. Radial band on for hemostasis. Distal pulse is good, hand is pink and warm.
+
+14
+00:25:10,000 --> 00:25:20,000
+CARDIOLOGIST: For handoff: successful PCI to mid LAD with one drug-eluting stent. Transient hypotension during ballooning, resolved. Radial access, band in place.
+
+15
+00:26:00,000 --> 00:26:10,000
+NURSE: To the coronary care unit for overnight monitoring. Dual antiplatelet started, aspirin and ticagrelor.
+
+16
+00:26:30,000 --> 00:26:38,000
+CARDIOLOGIST: Radial band down-staging protocol per nursing. I'll go and speak with the family now.

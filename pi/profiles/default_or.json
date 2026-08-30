@@ -1,0 +1,91 @@
+{
+  "id": "default_or",
+  "label": "Generic operating room (US)",
+  "care_setting": "operating_room",
+  "phases": [
+    "arrival",
+    "setup",
+    "timeout",
+    "induction",
+    "positioning_prep",
+    "incision",
+    "dissection",
+    "key_procedure",
+    "closure",
+    "emergence",
+    "handoff"
+  ],
+  "phase_synonyms": {
+    "time out": "timeout",
+    "sign in": "timeout",
+    "opening": "incision",
+    "skin incision": "incision",
+    "procedure": "key_procedure",
+    "main procedure": "key_procedure",
+    "closing": "closure",
+    "wake up": "emergence",
+    "extubation": "emergence",
+    "recovery": "handoff",
+    "transfer": "handoff"
+  },
+  "event_focus": [
+    "complication",
+    "conversion",
+    "blood_loss",
+    "hemodynamic_event",
+    "transfusion",
+    "count_status",
+    "specimen",
+    "disposition",
+    "medication_given"
+  ],
+  "handoff": {
+    "name": "I-PASS",
+    "intro": "Write the OR-to-PACU/ICU handoff using the I-PASS structure. Be terse and factual; no invented vitals or labs.",
+    "sections": [
+      {
+        "label": "I \u2014 Illness severity",
+        "guidance": "one of: stable | watcher | unstable (infer from complications / hemodynamics)"
+      },
+      {
+        "label": "P \u2014 Patient summary",
+        "guidance": "procedure performed, key intraoperative course, phase reached, EBL, transfusions, lines, drains, implants, counts status. If the count is intentionally incorrect (retained packs for damage control) or the abdomen is open, state clearly that this is deliberate and flag the planned second-look."
+      },
+      {
+        "label": "A \u2014 Action list",
+        "guidance": "what the receiving team must do next / follow up"
+      },
+      {
+        "label": "S \u2014 Situation awareness & contingencies",
+        "guidance": "what to watch for, as if/then"
+      },
+      {
+        "label": "S \u2014 Synthesis by receiver",
+        "guidance": "leave a blank line labelled 'Receiver read-back:'"
+      }
+    ]
+  },
+  "opnote_sections": [
+    "Preoperative diagnosis",
+    "Postoperative diagnosis",
+    "Procedure",
+    "Surgeon / anesthesia",
+    "Anesthesia type",
+    "Findings",
+    "Implants",
+    "Estimated blood loss",
+    "Specimens",
+    "Complications",
+    "Counts",
+    "Disposition"
+  ],
+  "family": {
+    "language": "English",
+    "reading_level": "about a 7th-grade level",
+    "sentences": "4-6",
+    "closing_line": "The surgeon will come speak with you directly.",
+    "notes": "Say where the patient is going next (recovery/ICU) and roughly when the family can expect to see them or hear from the surgeon."
+  },
+  "terminology": {},
+  "procedure_start_phase": "incision"
+}

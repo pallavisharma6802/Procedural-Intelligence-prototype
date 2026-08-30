@@ -1,0 +1,102 @@
+{
+  "id": "uk_or",
+  "label": "UK operating theatre (NHS)",
+  "care_setting": "operating_theatre",
+  "phases": [
+    "arrival",
+    "sign_in",
+    "team_brief",
+    "induction",
+    "positioning_prep",
+    "time_out",
+    "incision",
+    "dissection",
+    "key_procedure",
+    "closure",
+    "emergence",
+    "sign_out",
+    "handover"
+  ],
+  "phase_synonyms": {
+    "timeout": "time_out",
+    "time out": "time_out",
+    "wksi": "sign_in",
+    "who checklist": "sign_in",
+    "brief": "team_brief",
+    "opening": "incision",
+    "closing": "closure",
+    "recovery": "handover",
+    "transfer": "handover",
+    "extubation": "emergence",
+    "sign out": "sign_out"
+  },
+  "event_focus": [
+    "complication",
+    "conversion",
+    "blood_loss",
+    "hemodynamic_event",
+    "transfusion",
+    "count_status",
+    "specimen",
+    "disposition",
+    "medication_given"
+  ],
+  "handoff": {
+    "name": "SBAR",
+    "intro": "Write the theatre-to-recovery/ICU handover using SBAR. Terse and factual; no invented observations or bloods. Use UK terms (theatre, recovery, consultant, registrar, ODP).",
+    "sections": [
+      {
+        "label": "S \u2014 Situation",
+        "guidance": "patient, operation performed, current status, phase reached"
+      },
+      {
+        "label": "B \u2014 Background",
+        "guidance": "indication, relevant history, anaesthetic technique, intraoperative course, EBL, transfusion, lines, drains, implants, swab/instrument count. If the count is deliberately incorrect (packs left for damage control) or the abdomen is left open, state clearly this is planned and flag the relook."
+      },
+      {
+        "label": "A \u2014 Assessment",
+        "guidance": "stability (stable / for close observation / unstable), main concerns"
+      },
+      {
+        "label": "R \u2014 Recommendation",
+        "guidance": "what recovery/ICU should do and monitor, as if/then; end with a blank line labelled 'Receiving nurse read-back:'"
+      }
+    ]
+  },
+  "opnote_sections": [
+    "Date and time",
+    "Operating surgeon and anaesthetist",
+    "Operation",
+    "Indication",
+    "Anaesthetic",
+    "Findings",
+    "Procedure in brief",
+    "Implants / prostheses",
+    "Estimated blood loss",
+    "Specimens sent",
+    "Complications",
+    "Swab and instrument count",
+    "Post-operative instructions",
+    "Disposal"
+  ],
+  "family": {
+    "language": "English",
+    "reading_level": "about a 7th-grade level",
+    "sentences": "4-6",
+    "closing_line": "The surgeon will come and speak with you as soon as they can.",
+    "notes": "Use British phrasing (theatre, recovery ward). Say where the patient is going next and roughly when the family can expect news."
+  },
+  "terminology": {
+    "OR": "theatre",
+    "operating room": "theatre",
+    "PACU": "recovery",
+    "attending": "consultant",
+    "resident": "registrar",
+    "scrub tech": "scrub nurse",
+    "sponge count": "swab count",
+    "epinephrine": "adrenaline",
+    "acetaminophen": "paracetamol",
+    "OR nurse": "theatre nurse"
+  },
+  "procedure_start_phase": "incision"
+}

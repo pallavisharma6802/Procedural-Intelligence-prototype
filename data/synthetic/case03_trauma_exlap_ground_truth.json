@@ -1,0 +1,52 @@
+{
+  "case_id": "case03_trauma_exlap",
+  "summary": "Damage-control laparotomy in a 27-year-old after high-speed MVC with hemorrhagic shock. Splenectomy for a shattered spleen, ~20 cm non-viable small bowel resected and left in discontinuity. Massive transfusion (8 PRBC / 6 FFP / 2 platelets / 1 cryo), EBL >= 3 L, norepinephrine. Damage-control: open abdomen with wound vac, laparotomy pads intentionally retained, counts intentionally incorrect. To ICU intubated on pressors, planned second look in 24-48 h.",
+  "expected_event_types": [
+    "phase_transition",
+    "medication_given",
+    "incision",
+    "hemodynamic_event",
+    "transfusion",
+    "blood_loss",
+    "complication",
+    "specimen",
+    "count_status",
+    "disposition"
+  ],
+  "expected_state": {
+    "phase": "handoff",
+    "counts": "incorrect",
+    "disposition": "ICU"
+  },
+  "key_facts": {
+    "mechanism": "high-speed motor vehicle collision",
+    "shock": "hypotensive 74/40 then 68 systolic, HR 130",
+    "pressor": "norepinephrine",
+    "transfusion_total": "8 PRBC, 6 FFP, 2 platelets, 1 cryo",
+    "ebl_min_ml": 3000,
+    "procedures": ["splenectomy", "small bowel resection in discontinuity", "temporary abdominal closure / wound vac"],
+    "open_abdomen": true,
+    "retained_intentional": "4 laparotomy pads + packs, documented",
+    "disposition": "ICU intubated on norepinephrine, second look OR in 24-48h",
+    "no_formal_timeout": true
+  },
+  "must": {
+    "handoff_severity": "unstable",
+    "handoff_mentions": ["open abdomen", "retained packs are intentional", "massive transfusion", "on norepinephrine", "plan for second-look laparotomy"],
+    "counts_not_flagged_as_error": "the incorrect count is intentional damage-control, handoff/opnote must say so, not report it as a lost sponge",
+    "family_tone": "serious and honest but not graphic; conveys critical condition, ICU, team is doing everything, surgeon will speak in person"
+  },
+  "family_update_must": [
+    "serious injuries from the crash",
+    "surgery to stop bleeding / remove the spleen",
+    "patient is in critical condition / very sick",
+    "going to the intensive care unit",
+    "on a breathing machine",
+    "surgeon will speak with the family in person"
+  ],
+  "family_update_must_not": [
+    "transfusion unit counts",
+    "drug names or doses",
+    "the phrase 'incorrect count' without explaining it was intentional"
+  ]
+}

@@ -1,0 +1,96 @@
+{
+  "id": "cath_lab",
+  "label": "Cardiac catheterisation laboratory",
+  "care_setting": "cardiac_cath_lab",
+  "phases": [
+    "arrival",
+    "timeout",
+    "sedation",
+    "access",
+    "diagnostic_angiography",
+    "intervention",
+    "hemostasis",
+    "recovery",
+    "handoff"
+  ],
+  "phase_synonyms": {
+    "time out": "timeout",
+    "puncture": "access",
+    "sheath in": "access",
+    "arterial access": "access",
+    "angio": "diagnostic_angiography",
+    "coronary angiography": "diagnostic_angiography",
+    "pci": "intervention",
+    "stenting": "intervention",
+    "ballooning": "intervention",
+    "angioplasty": "intervention",
+    "closure": "hemostasis",
+    "sheath out": "hemostasis",
+    "manual pressure": "hemostasis",
+    "incision": "access",
+    "key_procedure": "intervention"
+  },
+  "event_focus": [
+    "complication",
+    "hemodynamic_event",
+    "medication_given",
+    "device_step",
+    "implant_placed",
+    "blood_loss",
+    "disposition"
+  ],
+  "handoff": {
+    "name": "SBAR",
+    "intro": "Write the cath-lab-to-CCU/ward handoff using SBAR. Terse and factual; no invented pressures, gradients or angiographic findings. This is a percutaneous procedure \u2014 there is no 'incision', use 'access site'.",
+    "sections": [
+      {
+        "label": "S \u2014 Situation",
+        "guidance": "patient, procedure performed (diagnostic vs PCI, vessels treated), current status"
+      },
+      {
+        "label": "B \u2014 Background",
+        "guidance": "indication, access site and closure method, sheath size, contrast volume, anticoagulation / antiplatelet given, devices/stents deployed, any hemodynamic events, blood loss"
+      },
+      {
+        "label": "A \u2014 Assessment",
+        "guidance": "stable / for close observation / unstable; access-site status; main concerns"
+      },
+      {
+        "label": "R \u2014 Recommendation",
+        "guidance": "access-site checks, distal pulse and neurovascular checks, bed rest duration, antiplatelet plan, when to escalate \u2014 as if/then; end with a blank line 'Receiving nurse read-back:'"
+      }
+    ]
+  },
+  "opnote_sections": [
+    "Date",
+    "Operator",
+    "Procedure",
+    "Indication",
+    "Access site and closure",
+    "Sheath size",
+    "Contrast agent and volume",
+    "Fluoroscopy time / dose",
+    "Anticoagulation",
+    "Findings",
+    "Devices / stents deployed",
+    "Complications",
+    "Estimated blood loss",
+    "Disposition"
+  ],
+  "family": {
+    "language": "English",
+    "reading_level": "about a 7th-grade level",
+    "sentences": "4-6",
+    "closing_line": "The cardiologist will come speak with you directly.",
+    "notes": "This was a procedure through a small tube in an artery, not open surgery \u2014 say so plainly. Mention the patient needs to lie still for a while so the puncture site heals. Say where they go next (heart monitoring unit / ward)."
+  },
+  "terminology": {
+    "surgeon": "cardiologist",
+    "OR": "cath lab",
+    "operating room": "cath lab",
+    "incision": "access site",
+    "PACU": "recovery area",
+    "attending": "consultant cardiologist"
+  },
+  "procedure_start_phase": "access"
+}

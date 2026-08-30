@@ -1,0 +1,92 @@
+{
+  "id": "mmor_robotic",
+  "label": "Robotic-assisted knee arthroplasty (MM-OR style)",
+  "care_setting": "operating_room",
+  "phases": [
+    "room_setup",
+    "robot_setup",
+    "calibration",
+    "draping",
+    "timeout",
+    "registration",
+    "bone_preparation",
+    "trialing",
+    "implant",
+    "cementing",
+    "closure",
+    "handoff"
+  ],
+  "phase_synonyms": {
+    "setup": "room_setup",
+    "arrival": "room_setup",
+    "robot dressing": "draping",
+    "dressing the robot": "draping",
+    "time out": "timeout",
+    "incision": "registration",
+    "key_procedure": "bone_preparation",
+    "cutting": "bone_preparation",
+    "trial": "trialing",
+    "closing": "closure",
+    "emergence": "closure"
+  },
+  "event_focus": [
+    "device_step",
+    "equipment_issue",
+    "implant_placed",
+    "count_status",
+    "medication_given",
+    "complication",
+    "blood_loss"
+  ],
+  "handoff": {
+    "name": "I-PASS",
+    "intro": "Write the OR-to-PACU handoff for a robotic-assisted joint replacement using I-PASS. Terse and factual; no invented vitals. Note any equipment/robot issues and whether they were resolved.",
+    "sections": [
+      {
+        "label": "I \u2014 Illness severity",
+        "guidance": "stable | watcher | unstable"
+      },
+      {
+        "label": "P \u2014 Patient summary",
+        "guidance": "joint replaced, side, robotic system used, components implanted (femoral / tibial / patellar), cement vs cementless, tourniquet time if known, EBL, counts, phase reached, any intraoperative equipment issues and their resolution"
+      },
+      {
+        "label": "A \u2014 Action list",
+        "guidance": "weight-bearing status, DVT prophylaxis, drain if any, imaging to review"
+      },
+      {
+        "label": "S \u2014 Situation awareness & contingencies",
+        "guidance": "watch for neurovascular status, bleeding, pain \u2014 as if/then"
+      },
+      {
+        "label": "S \u2014 Synthesis by receiver",
+        "guidance": "leave a blank line labelled 'Receiver read-back:'"
+      }
+    ]
+  },
+  "opnote_sections": [
+    "Preoperative diagnosis",
+    "Postoperative diagnosis",
+    "Procedure",
+    "Surgeon / anesthesia",
+    "Anesthesia type",
+    "Robotic system",
+    "Implants",
+    "Fixation",
+    "Tourniquet time",
+    "Estimated blood loss",
+    "Complications",
+    "Equipment issues",
+    "Counts",
+    "Disposition"
+  ],
+  "family": {
+    "language": "English",
+    "reading_level": "about a 7th-grade level",
+    "sentences": "4-6",
+    "closing_line": "The surgeon will come speak with you directly.",
+    "notes": "A robot-assisted knee replacement \u2014 the surgeon guides a robotic arm to place the new joint precisely. Say the new joint parts are in place and the patient goes to recovery, then usually starts walking with physiotherapy the same or next day."
+  },
+  "terminology": {},
+  "procedure_start_phase": "registration"
+}

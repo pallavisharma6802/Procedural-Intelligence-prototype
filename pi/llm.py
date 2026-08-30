@@ -1,0 +1,173 @@
+"""Provider shim.
+
+Default: Groq free tier if GROQ_API_KEY is set, else local Ollama.
+Also supported: Gemini free tier. Use hosted providers with public/synthetic data only.
+"""
+
+from __future__ import annotations
+
+import json
+import os
+import random
+import re
+import threading
+import time
+from typing import Any, Optional
+
+import httpx
+
+# Minimum spacing between outbound LLM calls (seconds). One global gate serializes the whole
+# pipeline's hosted-API traffic so bursts from concurrent agents don't trip free-tier limits.
+_MIN_SPACING = float(os.environ.get("PI_MIN_SPACING", "5.0"))
+_throttle_lock = threading.Lock()
+_last_call = [0.0]
+_RETRIES = int(os.environ.get("PI_RETRIES", "4"))
+_MAX_BACKOFF = float(os.environ.get("PI_MAX_BACKOFF", "40"))  # per-minute 429s clear fast; daily quota (~30min) we skip
+
+
+def _throttle() -> None:
+    # Reserve our slot under the lock, then sleep outside it so callers queue in order
+    # without holding the lock for the whole wait.
+    with _throttle_lock:
+        now = time.monotonic()
+        slot = max(now, _last_call[0] + _MIN_SPACING)
+        _last_call[0] = slot
+    delay = slot - time.monotonic()
+    if delay > 0:
+        time.sleep(delay)
+
+
+def _post_with_retry(url: str, *, tries: int = None, **kw) -> httpx.Response:
+    """POST with a global spacing throttle + bounded backoff on 429 / 5xx."""
+    tries = tries or _RETRIES
+    for attempt in range(tries):
+        _throttle()
+        try:
+            r = httpx.post(url, **kw)
+        except httpx.RequestError as exc:
+            if attempt == tries - 1:
+                raise
+            print(f"  [llm] {type(exc).__name__}, retrying")
+            time.sleep(min(2 ** attempt, 10))
+            continue
+        if r.status_code not in (429, 500, 502, 503, 529) or attempt == tries - 1:
+            r.raise_for_status()
+            return r
+        wait = float(r.headers.get("retry-after", 0) or 0) or min(2 ** attempt, 12)
+        if wait > _MAX_BACKOFF:  # e.g. daily-quota 429 says "try again in 31m" — don't block
+            r.raise_for_status()
+        time.sleep(wait + random.uniform(0.2, 1.0))
+    return r  # unreachable
+
+
+def _default_provider() -> str:
+    if os.environ.get("GROQ_API_KEY"):
+        return "groq"
+    return "ollama"
+
+
+PROVIDER = os.environ.get("PI_PROVIDER") or _default_provider()
+_MODEL_DEFAULTS = {
+    "ollama": "qwen2.5:3b",
+    "groq": "qwen/qwen3.8-27b",
+    "gemini": "gemini-2.5-flash",
+}
+MODEL = os.environ.get("PI_MODEL") or _MODEL_DEFAULTS.get(PROVIDER, "qwen2.5:3b")
+# Optional cheaper/faster model for the critic's fact-check calls.
+CRITIC_MODEL = os.environ.get("PI_CRITIC_MODEL") or MODEL
+OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
+_read_to = float(os.environ.get("PI_TIMEOUT", "150"))
+_TIMEOUT = httpx.Timeout(_read_to, connect=15.0)
+
+
+def complete(
+    system: str, user: str, *, json_out: bool = False, temperature: float = 0.2, model: str = None
+) -> str:
+    model = model or MODEL
+    if PROVIDER == "ollama":
+        return _ollama(system, user, json_out, temperature, model)
+    if PROVIDER == "groq":
+        return _groq(system, user, json_out, temperature, model)
+    if PROVIDER == "gemini":
+        return _gemini(system, user, json_out, temperature, model)
+    raise ValueError(f"unknown PI_PROVIDER={PROVIDER!r}")
+
+
+def complete_json(system: str, user: str, *, temperature: float = 0.2, model: str = None) -> Any:
+    raw = complete(system, user, json_out=True, temperature=temperature, model=model)
+    return _extract_json(raw)
+
+
+def _ollama(system: str, user: str, json_out: bool, temperature: float, model: str) -> str:
+    body: dict[str, Any] = {
+        "model": model,
+        "stream": False,
+        "think": False,  # qwen3 etc.: skip chain-of-thought, we want the JSON
+        "options": {"temperature": temperature, "num_ctx": 8192},
+        "messages": [
+            {"role": "system", "content": system},
+            {"role": "user", "content": user},
+        ],
+    }
+    if json_out:
+        body["format"] = "json"
+    r = _post_with_retry(f"{OLLAMA_HOST}/api/chat", json=body, timeout=_TIMEOUT)
+    return r.json()["message"]["content"]
+
+
+def _groq(system: str, user: str, json_out: bool, temperature: float, model: str) -> str:
+    key = os.environ["GROQ_API_KEY"]
+    body: dict[str, Any] = {
+        "model": model,
+        "temperature": temperature,
+        "max_completion_tokens": int(os.environ.get("PI_MAX_TOKENS", "4000")),
+        "messages": [
+            {"role": "system", "content": system},
+            {"role": "user", "content": user},
+        ],
+    }
+    if "gpt-oss" in model:  # otherwise these models spend minutes on chain-of-thought
+        body["reasoning_effort"] = os.environ.get("PI_REASONING", "low")
+    if json_out:
+        body["response_format"] = {"type": "json_object"}
+    r = _post_with_retry(
+        "https://api.groq.com/openai/v1/chat/completions",
+        json=body,
+        headers={"Authorization": f"Bearer {key}"},
+        timeout=_TIMEOUT,
+    )
+    return r.json()["choices"][0]["message"]["content"]
+
+
+def _gemini(system: str, user: str, json_out: bool, temperature: float, model: str) -> str:
+    key = os.environ["GEMINI_API_KEY"]
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+    gen: dict[str, Any] = {"temperature": temperature}
+    if json_out:
+        gen["responseMimeType"] = "application/json"
+    body = {
+        "systemInstruction": {"parts": [{"text": system}]},
+        "contents": [{"role": "user", "parts": [{"text": user}]}],
+        "generationConfig": gen,
+    }
+    r = _post_with_retry(url, json=body, params={"key": key}, timeout=_TIMEOUT)
+    return r.json()["candidates"][0]["content"]["parts"][0]["text"]
+
+
+def _extract_json(raw: str) -> Any:
+    raw = raw.strip()
+    try:
+        return json.loads(raw)
+    except json.JSONDecodeError:
+        pass
+    m = re.search(r"```(?:json)?\s*(.*?)```", raw, re.DOTALL)
+    if m:
+        return json.loads(m.group(1))
+    m = re.search(r"(\{.*\}|\[.*\])", raw, re.DOTALL)
+    if m:
+        return json.loads(m.group(1))
+    raise ValueError(f"no JSON found in model output:\n{raw[:500]}")
+
+
+def info() -> str:
+    return f"{PROVIDER}:{MODEL}"

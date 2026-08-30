@@ -1,0 +1,46 @@
+{
+  "case_id": "case01_lapchole",
+  "summary": "Laparoscopic cholecystectomy for acute cholecystitis, converted to open due to dense adhesions and an unobtainable critical view of safety. Liver-bed bleeding, EBL ~400 mL, transient hypotension managed with crystalloid, no transfusion. JP drain to gallbladder fossa. Counts correct. Extubated in room. PACU then floor admission overnight.",
+  "expected_event_types": [
+    "phase_transition",
+    "medication_given",
+    "incision",
+    "conversion",
+    "blood_loss",
+    "hemodynamic_event",
+    "specimen",
+    "complication",
+    "count_status",
+    "drain_placed",
+    "disposition"
+  ],
+  "expected_state": {
+    "phase": "handoff",
+    "ebl_ml": 400,
+    "counts": "correct",
+    "converted": "laparoscopic -> open",
+    "disposition": "floor"
+  },
+  "key_facts": {
+    "conversion_to_open": true,
+    "antibiotic": "cefazolin 2 g IV",
+    "drain": "one Jackson-Pratt in gallbladder fossa",
+    "transfusion": "none",
+    "specimen": "gallbladder to pathology",
+    "complications": ["difficult anatomy / no critical view laparoscopically", "liver-bed bleeding", "transient intraoperative hypotension"],
+    "lines": ["second IV left forearm"],
+    "extubated_in_room": true
+  },
+  "family_update_must": [
+    "gallbladder was removed",
+    "surgery was switched from keyhole to an open incision",
+    "there was extra bleeding that the team controlled",
+    "patient is going to the recovery area",
+    "surgeon will speak with the family in person"
+  ],
+  "family_update_must_not": [
+    "specific blood loss volume",
+    "drug names or doses",
+    "prognosis or outcome speculation"
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "case_id": "case04_cath_pci",
+  "profile": "cath_lab",
+  "summary": "Coronary angiography + PCI for NSTEMI. Right radial 6F access, 90% mid-LAD culprit stenosis, pre-dilated then one 3.0x18 mm drug-eluting stent, post-dilated, TIMI 3. Transient hypotension (95 systolic) and chest pain during balloon inflation, resolved. Contrast ~140 mL, fluoro 12 min, minimal blood loss. Radial band hemostasis, good distal perfusion. To CCU on dual antiplatelet (aspirin + ticagrelor).",
+  "expected_event_types": [
+    "phase_transition",
+    "medication_given",
+    "hemodynamic_event",
+    "implant_placed",
+    "device_step",
+    "disposition"
+  ],
+  "expected_state": {
+    "phase": "handoff",
+    "disposition": "CCU"
+  },
+  "key_facts": {
+    "access": "right radial, 6 French sheath",
+    "culprit": "90% mid-LAD stenosis",
+    "stent": "one 3.0 x 18 mm drug-eluting stent to mid LAD",
+    "hemodynamic_event": "transient hypotension (95 systolic) + chest pain during balloon inflation, resolved",
+    "contrast_ml": 140,
+    "fluoro_min": 12,
+    "closure": "radial band",
+    "antiplatelet": "aspirin + ticagrelor",
+    "disposition": "coronary care unit overnight"
+  },
+  "must": {
+    "no_incision_language": "handoff/opnote/family must NOT say 'incision' or 'wound' — this is percutaneous; access is a radial puncture",
+    "handoff_format": "SBAR (S/B/A/R sections), not I-PASS",
+    "family_tone": "reassuring, explains it was done through a small tube in the wrist artery, patient must lie still / keep the wrist still for a while, going to a heart monitoring unit",
+    "family_says_cardiologist": "the closing line should reference the cardiologist, not 'surgeon'"
+  }
+}

@@ -1,0 +1,79 @@
+1
+00:00:15,000 --> 00:00:24,000
+CIRCULATOR: Trauma activation. 27-year-old, high-speed MVC, hypotensive in the bay, going straight to ex-lap.
+
+2
+00:01:10,000 --> 00:01:19,000
+ANESTHESIA: Rapid sequence induction, etomidate and succinylcholine. Tube confirmed. Two large-bore IVs, starting the rapid transfuser.
+
+3
+00:02:30,000 --> 00:02:38,000
+ANESTHESIA: Pressure is 74 over 40, heart rate 130. Activating massive transfusion protocol. Hanging PRBC and FFP now.
+
+4
+00:03:00,000 --> 00:03:05,000
+SURGEON: No time for a formal time out. Prepping and draping. Betadine, wide.
+
+5
+00:03:40,000 --> 00:03:48,000
+SURGEON: Midline laparotomy from xiphoid to pubis. Lots of blood in the abdomen. Suction, and get me packs.
+
+6
+00:04:30,000 --> 00:04:38,000
+SURGEON: Packing all four quadrants. The bleeding is coming from the left upper quadrant, I think the spleen.
+
+7
+00:06:00,000 --> 00:06:09,000
+ANESTHESIA: Still hypotensive, 68 systolic. Giving another 2 units red cells and 2 FFP. Started norepinephrine.
+
+8
+00:08:20,000 --> 00:08:30,000
+SURGEON: The spleen is shattered. Doing a splenectomy. Clamping the hilum now. Dividing the short gastrics.
+
+9
+00:11:00,000 --> 00:11:08,000
+SURGEON: Spleen is out. That was the main source. Pressure should start coming up.
+
+10
+00:12:30,000 --> 00:12:39,000
+ANESTHESIA: Coming up now, 95 over 55 on a little norepi. We've given 6 units red cells, 4 FFP, 1 platelets so far.
+
+11
+00:15:00,000 --> 00:15:10,000
+SURGEON: Now running the bowel. There's a segment of small bowel with a mesenteric tear and it looks non-viable, about 20 centimeters.
+
+12
+00:18:45,000 --> 00:18:55,000
+SURGEON: Resecting that segment. Stapling across proximal and distal. Leaving it in discontinuity for now.
+
+13
+00:22:00,000 --> 00:22:10,000
+SURGEON: Rest of the bowel looks okay. Liver is intact. No other major injuries that I can see.
+
+14
+00:24:30,000 --> 00:24:40,000
+SURGEON: Patient's still cold and coagulopathic. We're going to do damage control. Temporary abdominal closure with a wound vac.
+
+15
+00:26:00,000 --> 00:26:08,000
+SURGEON: Leaving packs in the pelvis and the left upper quadrant. Abdomen stays open.
+
+16
+00:27:30,000 --> 00:27:38,000
+CIRCULATOR: Counts are intentionally incorrect. Documenting: 4 laparotomy pads retained on purpose for damage control, plus the packs.
+
+17
+00:29:00,000 --> 00:29:10,000
+ANESTHESIA: EBL is hard to estimate, at least 3 liters. Total given: 8 red cells, 6 FFP, 2 platelets, 1 cryo.
+
+18
+00:30:15,000 --> 00:30:24,000
+SURGEON: For handoff: damage control laparotomy, splenectomy, small bowel resection in discontinuity, open abdomen with packs.
+
+19
+00:30:40,000 --> 00:30:50,000
+ANESTHESIA: Going to the ICU intubated, on norepinephrine. Plan is to warm, resuscitate, correct coags, and back to the OR in 24 to 48 hours.
+
+20
+00:31:20,000 --> 00:31:28,000
+SURGEON: The family is in the surgical waiting room. They know it's serious. I'll go talk to them now.

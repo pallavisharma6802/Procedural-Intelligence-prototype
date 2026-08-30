@@ -1,0 +1,39 @@
+{
+  "case_id": "case02_tka_uneventful",
+  "summary": "Uncomplicated primary right total knee arthroplasty under spinal anesthesia for osteoarthritis. Cemented cruciate-retaining components, tourniquet time 29 min, EBL ~50 mL, no drain, counts correct, hemodynamically stable throughout. PACU then orthopedic floor, weight-bearing as tolerated.",
+  "expected_event_types": [
+    "phase_transition",
+    "medication_given",
+    "incision",
+    "implant_placed",
+    "blood_loss",
+    "count_status",
+    "disposition"
+  ],
+  "expected_state": {
+    "phase": "handoff",
+    "ebl_ml": 50,
+    "counts": "correct",
+    "disposition": "floor"
+  },
+  "key_facts": {
+    "anesthesia": "spinal with sedation",
+    "antibiotic": "cefazolin 2 g IV",
+    "complications": "none",
+    "transfusion": "none",
+    "drain": "none",
+    "implants": ["femoral component", "tibial baseplate", "patellar button (all-poly)"],
+    "tourniquet_time_min": 29
+  },
+  "must_not": {
+    "no_invented_complication": "handoff/opnote/family must NOT describe any complication, bleeding problem, or instability",
+    "family_tone": "family update should be straightforwardly reassuring, no hedging about difficulties",
+    "handoff_severity": "stable (not watcher, not unstable)"
+  },
+  "family_update_must": [
+    "knee replacement is finished",
+    "went smoothly / no problems",
+    "patient is in recovery",
+    "surgeon will speak with the family"
+  ]
+}

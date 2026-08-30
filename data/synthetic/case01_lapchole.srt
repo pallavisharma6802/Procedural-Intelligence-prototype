@@ -1,0 +1,119 @@
+1
+00:00:12,000 --> 00:00:18,000
+CIRCULATOR: Room's ready. Patient is a 54-year-old for laparoscopic cholecystectomy, acute cholecystitis.
+
+2
+00:01:05,000 --> 00:01:14,000
+ANESTHESIA: Pre-oxygenating now. Plan is general endotracheal, propofol and rocuronium for induction.
+
+3
+00:03:40,000 --> 00:03:46,000
+ANESTHESIA: Induction complete, tube's in, good bilateral breath sounds. Second IV placed in the left forearm.
+
+4
+00:05:30,000 --> 00:05:52,000
+SURGEON: Let's do our time out. Confirming patient, laparoscopic cholecystectomy, possible conversion to open, consent signed, antibiotics given?
+
+5
+00:05:52,000 --> 00:05:57,000
+ANESTHESIA: Cefazolin two grams IV went in about ten minutes ago.
+
+6
+00:06:10,000 --> 00:06:14,000
+SURGEON: Great. Everyone agree? Time out complete.
+
+7
+00:08:20,000 --> 00:08:27,000
+SURGEON: Prepped and draped. Making the infraumbilical incision now for the Veress needle.
+
+8
+00:09:15,000 --> 00:09:20,000
+SURGEON: Insufflating. Pressures look good, fifteen millimeters of mercury. Placing the ports.
+
+9
+00:12:00,000 --> 00:12:10,000
+SURGEON: Camera's in. There's a lot of inflammation around the gallbladder, omentum is stuck to it. Adhesions are dense.
+
+10
+00:15:30,000 --> 00:15:38,000
+SURGEON: Taking down the adhesions. The tissue planes are really hard to see here.
+
+11
+00:19:45,000 --> 00:19:55,000
+SURGEON: I'm having trouble getting a critical view of safety. The anatomy at the triangle is completely obscured.
+
+12
+00:22:10,000 --> 00:22:19,000
+SURGEON: There's bleeding from the liver bed, more than I'd like. Suction please. Estimate maybe 150 mils so far.
+
+13
+00:24:00,000 --> 00:24:12,000
+SURGEON: I'm not comfortable continuing laparoscopically. We're going to convert to open. Let's get the open tray.
+
+14
+00:24:30,000 --> 00:24:35,000
+ANESTHESIA: Copy, converting to open. Patient's stable, heart rate 88, pressure 120 over 70.
+
+15
+00:27:00,000 --> 00:27:08,000
+SURGEON: Making a right subcostal incision. Extending it now.
+
+16
+00:32:15,000 --> 00:32:25,000
+SURGEON: Better exposure now. I can see the cystic duct and artery clearly. Getting my critical view.
+
+17
+00:36:40,000 --> 00:36:48,000
+SURGEON: Clipping the cystic artery. And the cystic duct, two clips proximal, one distal. Dividing.
+
+18
+00:39:00,000 --> 00:39:07,000
+SURGEON: Taking the gallbladder off the liver bed with the cautery.
+
+19
+00:41:20,000 --> 00:41:28,000
+SURGEON: Gallbladder is out. It's going to pathology. Send it as gallbladder, acute cholecystitis.
+
+20
+00:42:30,000 --> 00:42:40,000
+SURGEON: More oozing from the liver bed. Let's put some hemostatic agent on it and pack it for a few minutes.
+
+21
+00:46:00,000 --> 00:46:09,000
+ANESTHESIA: Blood pressure dipped to 92 over 55. Giving a fluid bolus. Heart rate's up to 104.
+
+22
+00:48:30,000 --> 00:48:40,000
+SURGEON: Bleeding's controlled now. Total blood loss I'd estimate around 400 mils.
+
+23
+00:49:10,000 --> 00:49:18,000
+ANESTHESIA: Pressure came back up to 118 over 68 after the liter of crystalloid. No transfusion needed.
+
+24
+00:52:00,000 --> 00:52:08,000
+SURGEON: Placing a Jackson-Pratt drain in the gallbladder fossa, bringing it out the lateral port site.
+
+25
+00:55:45,000 --> 00:55:53,000
+CIRCULATOR: Instrument, sponge, and needle counts are correct times two.
+
+26
+00:56:30,000 --> 00:56:37,000
+SURGEON: Closing the fascia with looped PDS. Skin with staples.
+
+27
+01:02:00,000 --> 01:02:10,000
+ANESTHESIA: Reversing paralysis. Patient breathing spontaneously, extubated, moving all four extremities.
+
+28
+01:04:30,000 --> 01:04:42,000
+SURGEON: For handoff: converted lap chole to open, difficult anatomy, EBL 400, one JP drain in the fossa. No transfusion.
+
+29
+01:05:00,000 --> 01:05:12,000
+ANESTHESIA: He'll go to the PACU first, then I want him admitted overnight for pain control and to watch the drain output.
+
+30
+01:05:30,000 --> 01:05:38,000
+SURGEON: Agree, floor admission after PACU. I'll update the family now.

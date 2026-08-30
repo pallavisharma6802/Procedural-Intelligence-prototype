@@ -10,6 +10,9 @@ dependencies = [
     "srt>=3.5",
     "rich>=13.7",
     "langgraph>=0.2",
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.27",
+    "python-multipart>=0.0.9",
 ]
 
 [project.optional-dependencies]
@@ -27,3 +30,4 @@ packages = ["pi"]
 
 [tool.hatch.build.targets.wheel.force-include]
 "pi/profiles" = "pi/profiles"
+"web/index.html" = "web/index.html"

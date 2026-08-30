@@ -320,7 +320,7 @@ const CASE_TITLES = {
 function caseLabel(c){
   const nm = CASE_TITLES[c.case_id] || c.case_id;
   const src = /audio|\.mp3|\.m4a|\.wav/i.test(c.source || '') ? 'audio' : 'transcript';
-  return `${nm}  ·  ${src}`;
+  return nm + '  ·  ' + src;
 }
 
 async function loadCase(id){
@@ -511,7 +511,7 @@ function payloadText(e){
   if (e.type === 'medication_given') return [p.name, p.dose, p.route].filter(Boolean).join(' ');
   if (e.type === 'blood_loss') return 'EBL ' + p.ebl_ml + ' mL';
   if (e.type === 'transfusion') return [p.units, p.product].filter(Boolean).join(' ');
-  if (e.type === 'conversion') return `${p.from||''} → ${p.to||''}`;
+  if (e.type === 'conversion') return (p.from||'') + ' → ' + (p.to||'');
   if (e.type === 'count_status') return 'counts ' + (p.status || '') + (p.intentional ? ' (intentional)' : '');
   if (e.type === 'disposition') return [p.destination, p.detail].filter(Boolean).join(' · ');
   return Object.values(p).filter(v => typeof v !== 'object').join(' · ') || e.type;

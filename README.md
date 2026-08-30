@@ -7,6 +7,27 @@ Not a transcription tool. The source of truth is an append-only `ProceduralEvent
 downstream is derived from the folded `CaseState`, with provenance from every state field back to
 the events and transcript turns that produced it.
 
+## The interface
+
+`pi serve` runs a web UI (`web/`, FastAPI backend) — three columns that make the thesis legible:
+
+```
+   transcript            procedural timeline            case state  +  documents
+ (what the room said)   (the reconstructed spine)     (as-of any moment)  (handoff · op note · family)
+        mono          phase-banded event stream          chip board         rendered per site profile
+         └──────────────── hover anything → it lights up in all three columns ────────────────┘
+```
+
+- A **draggable playhead** replays the `CaseState` — scrub back and the EBL, phase, counts and
+  disposition rewind to what was known at that minute.
+- Hover an event, a state chip, or a **linked phrase in a document** and the chain lights up:
+  document sentence → the event that produced it → the transcript line that was heard.
+- The **profile dropdown** re-runs the same case under another hospital's conventions
+  (I-PASS ⇄ SBAR, US ⇄ NHS terms) — one transcript, different record.
+- 0-event / thin recordings are shown as such, not papered over.
+
+Interactive demo (7 real reconstructed cases, no install): **[claude.ai artifact](https://claude.ai/code/artifact/540b5b44-e395-41fb-a50d-9e7fd5a5fc9b)**
+
 ## Hospital-agnostic by design
 
 The pipeline — the agent graph, the `ProceduralEvent` vocabulary, the `CaseState` fields — is
@@ -33,20 +54,24 @@ A **LangGraph** graph (`pi/graph.py`) drives specialist agents over one shared `
 `pi graph` prints it as mermaid:
 
 ```
-START → ingest → context → extract → reduce → handoff → opnote → family → critic_check
-   │      (LLM)  (LLM)   (fold,                                              │
-   │                     determ.)                flagged & round 0 ─────────┤
- .srt/.vtt → parse captions                              ▼                   │
- audio/video → Whisper (pi/stt.py)                 critic_revise ───────────┘
-                → same Turn[] shape                      │ else
-                                                         ▼
-                                                   critic_finalize → END
+START → ingest → roles → context → extract → reduce → handoff → opnote → family → critic_check
+   │             (LLM?)  (LLM)     (LLM)    (fold,                                     │
+   │                                        determ.)          flagged & round 0 ─────┤
+ .srt/.vtt → parse captions                                          ▼                │
+ audio/video → Whisper / AssemblyAI (pi/stt.py)               critic_revise ──────────┘
+                → same Turn[] shape                                  │ else
+                                                                     ▼
+                                                             critic_finalize → END
 ```
 
 - `ingest` takes a caption file (`.srt`/`.vtt`, parsed deterministically) **or** an audio/video
-  file (transcribed with Whisper — Groq `whisper-large-v3` by default, `faster-whisper` locally
-  with `PI_STT=local`). Both produce the same timed `Turn[]`; nothing downstream changes.
-  No speaker diarization yet — transcribed turns have `speaker=None`.
+  file — transcribed by Groq `whisper-large-v3` (default, transcription only), `faster-whisper`
+  locally (`PI_STT=local`), or **AssemblyAI / Deepgram** for transcription **+ speaker
+  diarization** in one call (`PI_STT=assemblyai`). Non-English audio: `PI_WHISPER_TASK=translate`.
+  All paths emit the same timed `Turn[]`.
+- `roles` maps raw speaker labels → clinical roles (surgeon / anesthesia / circulating nurse / …).
+  `.srt` prefixes (`SURGEON:`) map directly; diarized ids get one LLM call. No labels → no-op.
+  Events are then attributed to the dominant role of their evidence turns (`by_role`).
 - `reduce` is a plain function — not LLM-wrapped.
 - `context` (LLM) extracts patient descriptor / planned procedure / indication / anesthesia.
 - `extract` (LLM) = windowed workers **plus** a chunked whole-transcript "safety sweep". Both
@@ -94,10 +119,10 @@ Force a provider: `PI_PROVIDER=ollama|groq|gemini`, pick a model with `PI_MODEL`
 ## Run
 
 ```bash
+./.venv/bin/python -m pi.cli serve                              # web UI at http://127.0.0.1:8000
 ./.venv/bin/python -m pi.cli run data/synthetic/case01_lapchole.srt
 ./.venv/bin/python -m pi.cli run recording.m4a -c my_case            # audio/video → Whisper → pipeline
 ./.venv/bin/python -m pi.cli run case.srt --profile uk_or            # pick a site profile
-./.venv/bin/python -m pi.cli run data/synthetic/case04_cath_pci.srt --profile cath_lab
 ./.venv/bin/python -m pi.cli run <file> --upto understand            # stop early
 
 ./.venv/bin/python -m pi.cli profiles                           # list site profiles
@@ -108,8 +133,13 @@ Force a provider: `PI_PROVIDER=ollama|groq|gemini`, pick a model with `PI_MODEL`
 ```
 
 Config via env (or `.env`): `PI_PROFILE`, `PI_PROVIDER` (`groq`|`ollama`|`gemini`), `PI_MODEL`,
-`PI_CRITIC_MODEL`, `GROQ_API_KEY`, `GEMINI_API_KEY`, `PI_STT` (`groq`|`local`), `PI_MIN_SPACING`,
-`PI_CONCURRENCY`, `PI_TIMEOUT`, `OLLAMA_HOST`. Startup warnings silenced unless `PI_WARNINGS=1`.
+`PI_CRITIC_MODEL`, `GROQ_API_KEY`, `PI_STT` (`groq`|`assemblyai`|`deepgram`|`local`),
+`PI_WHISPER_TASK` (`transcribe`|`translate`), `PI_MIN_SPACING`, `PI_WINDOW_TURNS`,
+`OLLAMA_HOST`. Startup warnings silenced unless `PI_WARNINGS=1`.
+
+**Web UI** (`pi serve`, `web/`): drop a `.srt` or recording on the page, pick a profile, watch
+the graph run, then explore the reconstruction. `web/standalone.html` bakes the current runs
+into one self-contained file (that's what the artifact link above is).
 
 Artifacts land in `runs/<case_id>/`: `casefile.json` (full blackboard), `turns.json`,
 `events.json`, `state.jsonl`, `handoff.md`, `opnote.md`, `family.md`.
@@ -167,17 +197,23 @@ Groq's free tier is **8,000 tokens/minute** per model, so long transcripts need
 `PI_MIN_SPACING=19 PI_WINDOW_TURNS=90 PI_SWEEP_CHUNK=300` (≈8–10 min/case). The throttle+retry
 absorbs the rest; a single 413/429 on one chunk just drops a few events.
 
-**Audio front-end** — a synthetic OR clip (macOS `say`, `.m4a`) → Groq `whisper-large-v3` →
-7 transcribed turns → full pipeline extracts cefazolin / infraumbilical incision / EBL 400 /
-conversion to open / correct counts / PACU-then-floor, all three drafts accepted. `source:
-whisper` on the turns; timestamps from Whisper's segments.
+**Real MM-OR audio** — the 1 GB `take_audios.zip` is German MP3s. `007_TKA.mp3` (58 min, ffmpeg-
+chunked) → Groq Whisper **translate** → 446 turns → pipeline extracts ~10 events (robot camera
+fault, implant-sizing issue resolved with a size-4 tibia, cement, insertion, meniscus specimen).
+The handoff/op-note hold up; the **family note misframed it as a "training simulation"** — the
+translated OR chatter genuinely mentions a Mako *simulator* step. Good illustration of why a
+human signs the draft, and of the pipeline surfacing rather than hiding its uncertainty.
 
-~1.5–3 min/synthetic case; ~2 min including transcription for a short clip; ~8–10 min for a
-500–630-turn MM-OR case under the free-tier token budget.
+**Speaker roles** — synthetic `.srt` prefixes map to roles directly; on `case01` that's
+20 surgeon / 8 anesthesia / 2 circulating-nurse turns, and events get attributed
+("cefazolin — said by anesthesia", "counts correct — said by circulating nurse"). Diarized
+audio (AssemblyAI / Deepgram) feeds the same `roles` step — wired, not yet run on real OR audio.
 
-Known gaps: no speaker diarization on transcribed audio yet (pyannote is next); Groq free tier
-still 429s the occasional draft on long cases (rerun that one `pi stage <name>`); Groq Whisper
-free-tier upload cap is ~24 MB (auto-split with ffmpeg, else use `PI_STT=local`); the shipped
-profiles are illustrative starting points, not validated against any hospital's actual templates.
-Next: speaker diarization; a real cath-lab / L&D / endoscopy transcript per profile; profile
-authoring guide.
+~1.5–3 min/synthetic case; ~2 min for a short audio clip; ~8–10 min for a 500–630-turn MM-OR
+case under the free-tier token budget.
+
+Known gaps: diarization is coded but only exercised on labelled `.srt` so far (need an
+AssemblyAI/Deepgram key + real audio); Groq free tier 429s the occasional draft on long cases
+(rerun that one `pi stage <name>`); the shipped profiles are illustrative, not validated against
+any hospital's real templates. Next: run diarization on MM-OR audio; validate profiles with a
+clinical advisor; profile authoring guide.

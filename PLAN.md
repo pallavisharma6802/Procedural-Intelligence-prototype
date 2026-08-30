@@ -19,14 +19,14 @@ Shipped profiles: `default_or` (US OR, I-PASS), `uk_or` (NHS theatre, SBAR, Brit
 ## Pipeline — a LangGraph graph (`pi/graph.py`)
 
 ```
-START → ingest → context → extract → reduce → handoff → opnote → family → critic_check
-        │                   │        (fold,                                    │
-   .srt/.vtt → captions     │        profile   flagged & round 0 ──────────────┤
-   audio/video → Whisper    │        phases)          ▼                        │
-        → same Turn[]       │                   critic_revise ─────────────────┘
-                    windowed + safety-sweep           │ else
-                    extraction (profile-aware)        ▼
-                                                critic_finalize → END
+START → ingest → roles → context → extract → reduce → handoff → opnote → family → critic_check
+        │        (speaker  │        (LLM,                                            │
+   .srt/.vtt      → role)  │        profile      flagged & round 0 ─────────────────┤
+   audio → Whisper/         │        phases)             ▼                           │
+     AssemblyAI → Turn[]    │                      critic_revise ────────────────────┘
+                    windowed + safety-sweep             │ else
+                    extraction (profile-aware)          ▼
+                                                  critic_finalize → END
 ```
 
 - **ingest** — `.srt`/`.vtt` parsed deterministically, or audio/video → Whisper (`pi/stt.py`:
@@ -49,8 +49,8 @@ START → ingest → context → extract → reduce → handoff → opnote → f
   quota fails fast and one lost draft never crashes the run.
 
 ## Data model (`pi/schemas.py`)
-- `Turn { id, start_s, end_s, speaker?, text, source }`  (source: `srt` | `whisper`)
-- `ProceduralEvent { id, t_start_s, type, payload, evidence_turn_ids, confidence }`
+- `Turn { id, start_s, end_s, speaker?, role?, text, source }`  (source: srt|whisper|assemblyai|deepgram)
+- `ProceduralEvent { id, t_start_s, type, payload, evidence_turn_ids, by_role?, confidence }`
   - types: `phase_transition, medication_given, incision, conversion, implant_placed, line_placed,
     drain_placed, device_step, blood_loss, hemodynamic_event, transfusion, count_status, specimen,
     complication, equipment_issue, personnel_change, disposition`
@@ -61,34 +61,40 @@ START → ingest → context → extract → reduce → handoff → opnote → f
 - `SiteProfile { id, care_setting, phases, phase_synonyms, procedure_start_phase, event_focus,
    handoff{name,intro,sections[]}, opnote_sections[], family{...}, terminology{} }`
 
+## Web UI (`pi serve`, `web/`, `pi/server.py`, `pi/webexport.py`)
+Three columns — transcript · procedural timeline · case state + documents. Draggable playhead
+replays `CaseState`; hover an event / state chip / linked document phrase to trace the chain
+across all three columns. Profile dropdown re-runs the case under another hospital's conventions.
+`web/standalone.html` bakes the current runs in for a no-server demo (the published artifact).
+
 ## Tech stack
-- Python 3.9 in `.venv`. `pydantic` v2, `typer`, `httpx`, `srt`, `rich`, `langgraph`.
-- LLM shim `pi/llm.py`: Groq (default, `qwen/qwen3.8-27b` — Groq hosts no medical model),
-  Ollama local fallback, Gemini optional. `PI_MODEL` / `PI_CRITIC_MODEL` override.
-- STT optional local backend: `pip install '.[local-stt]'` (faster-whisper).
+- Python 3.9 in `.venv`. `pydantic` v2, `typer`, `httpx`, `srt`, `rich`, `langgraph`, `fastapi`+`uvicorn`.
+- LLM shim `pi/llm.py`: Groq (default `qwen/qwen3.8-27b` — Groq hosts no medical model), Ollama, Gemini.
+- STT `pi/stt.py`: Groq Whisper (default), AssemblyAI/Deepgram (diarizing), faster-whisper (`.[local-stt]`).
 - Artifacts: JSON/Markdown under `runs/<case_id>/` (`casefile.json` is the full blackboard).
 
 ## CLI (`pi/cli.py`)
 ```
+pi serve [--port N]                                        # web UI + API
 pi run <file> [--profile P] [--case-id X] [--upto STAGE]   # transcript OR audio/video
-pi profiles                                                # list site profiles
-pi graph                                                   # mermaid of the LangGraph
-pi stage <name> <case-id>                                  # re-run one node (reuses run's profile)
-pi show <case-id> [turns|events|context|state|provenance|handoff|opnote|family|log]
-pi evaluate <case-id>                                      # score vs data/synthetic/<id>_ground_truth.json
+pi profiles · pi graph · pi stage <name> <id>
+pi show <id> [turns|events|context|state|provenance|handoff|opnote|family|log]
+pi evaluate <id>
 ```
 
-## Status (2026-08-28)
-- 4 synthetic cases pass `pi evaluate` (case01/02/03 default_or, case04 cath_lab).
-- 4 real MM-OR knee transcripts (382–631 turns) run clean end to end, all drafts critic-accepted.
-- Whisper audio front-end verified on a synthetic clip.
-- Profile swing verified: one transcript, `default_or` vs `uk_or` → I-PASS vs SBAR, US vs UK
-  terminology and headings, `handoff` vs `handover` phase — no code change.
+## Status (2026-08-30)
+- 7 demo cases run end to end, all drafts critic-accepted; 4 pass `pi evaluate` (11/11·7/7·10/10·6/6 events).
+- Profile swing verified: one `case01` transcript, `default_or` vs `uk_or` → I-PASS vs SBAR,
+  US vs UK terms, `handoff` vs `handover` — no code change. `cath_lab` on a PCI case → SBAR, "access site".
+- MM-OR audio (`007_TKA.mp3`, German, 58 min) → Whisper translate → 10 events; family draft misframed
+  (surfaced, not hidden).
+- Speaker roles working on labelled `.srt`; diarizing STT backends wired, untested on real audio.
+- Web UI built (`pi serve`) + published as an interactive artifact.
 
 ## Next
-- Speaker diarization (pyannote) for transcribed audio — currently `speaker=None`.
-- A real de-identified transcript per non-OR profile (cath lab, L&D, endoscopy).
-- Profile authoring guide; validate shipped profiles against real hospital templates.
+- Run diarization (AssemblyAI/Deepgram) on real MM-OR audio.
+- Validate shipped profiles with a clinical advisor; profile authoring guide.
+- A real de-identified transcript per non-OR profile.
 
 ## No-PHI rule
 Synthetic / MM-OR / properly de-identified research data only — transcripts and audio. Never a

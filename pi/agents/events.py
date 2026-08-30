@@ -213,11 +213,30 @@ _FUZZY = {
 }
 
 
-def _norm_payload(p: dict) -> str:
-    def low(v):
-        return v.lower().strip() if isinstance(v, str) else v
+def _slug(*vals) -> str:
+    raw = " ".join(str(v) for v in vals if v).lower()
+    return " ".join("".join(ch if ch.isalnum() else " " for ch in raw).split())
 
-    return json.dumps({k: low(v) for k, v in sorted(p.items())})
+
+def _dedupe_key(e: ProceduralEvent) -> str:
+    """A loose identity for an event, so near-duplicate phrasings collapse."""
+    p = e.payload or {}
+    t = e.type
+    if t == EventType.medication_given:
+        return "med:" + _slug(p.get("name"))
+    if t in (EventType.line_placed, EventType.drain_placed):
+        return f"{t.value}:" + (_slug(p.get("site")) or _slug(p.get("type")))[:20]
+    if t == EventType.implant_placed:
+        return "impl:" + _slug(p.get("device"))[:24]
+    if t == EventType.transfusion:
+        return "txf:" + _slug(p.get("product"))
+    if t == EventType.phase_transition:
+        return "phase:" + _slug(p.get("phase"))
+    if t == EventType.blood_loss:
+        return "ebl:" + str(p.get("ebl_ml"))  # distinct EBL numbers are distinct events
+    if t in _FUZZY:
+        return t.value  # collapse any nearby same-type narrative event
+    return t.value + ":" + _slug(*p.values())
 
 
 def _dedupe(events: list[ProceduralEvent]) -> list[ProceduralEvent]:
@@ -225,15 +244,15 @@ def _dedupe(events: list[ProceduralEvent]) -> list[ProceduralEvent]:
     events.sort(key=lambda e: (e.t_start_s, -e.confidence))
     kept: list[ProceduralEvent] = []
     for e in events:
-        same_payload = _norm_payload(e.payload)
+        ekey = _dedupe_key(e)
         dup = None
         for k in kept:
             if k.type != e.type:
                 continue
-            window = 180 if e.type in _FUZZY else 30
+            window = 240 if (e.type in _FUZZY or e.type == EventType.medication_given) else 45
             if abs(k.t_start_s - e.t_start_s) > window:
                 continue
-            if e.type in _FUZZY or _norm_payload(k.payload) == same_payload:
+            if _dedupe_key(k) == ekey:
                 dup = k
                 break
         if dup:

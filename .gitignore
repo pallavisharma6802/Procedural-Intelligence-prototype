@@ -4,7 +4,6 @@ __pycache__/
 .env
 runs/
 MM-OR_data/
-!MM-OR_data/MM-OR_processed/take_transcripts/
 .DS_Store
 *.zip
-web/dist/
+web/node_modules/

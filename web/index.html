@@ -154,6 +154,13 @@ select{padding-right:26px;background-image:linear-gradient(45deg,transparent 50%
 .tl-empty{padding:56px 30px;text-align:center;color:var(--ink-faint);font-family:var(--mono);font-size:12px;line-height:1.8}
 
 /* ---- state + docs ---- */
+.ctx{padding:11px 14px;border-bottom:1px solid var(--line);flex:none;display:flex;flex-direction:column;gap:5px}
+.ctx .row{display:flex;gap:8px;font-family:var(--mono);font-size:11px;line-height:1.4}
+.ctx .row .k{color:var(--ink-faint);min-width:74px;text-transform:uppercase;letter-spacing:.06em;font-size:9px;padding-top:2px}
+.ctx .row .v{color:var(--ink);flex:1}
+.ctx .row.allergy .v{color:var(--alert)}
+.ctx .src{font-size:8px;letter-spacing:.06em;text-transform:uppercase;border:1px solid var(--line);border-radius:3px;padding:0 4px;color:var(--ink-faint);align-self:center}
+.ctx .src.ehr{color:var(--accent-ink);border-color:var(--accent-line)}
 .board{padding:12px 14px;border-bottom:1px solid var(--line);flex:none}
 .board .grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:9px}
 .stat{border:1px solid var(--line);border-radius:8px;padding:8px 10px;cursor:pointer;transition:border-color .12s,background .12s}
@@ -246,6 +253,7 @@ select{padding-right:26px;background-image:linear-gradient(45deg,transparent 50%
 
     <!-- state + docs -->
     <section class="col" aria-label="Case state and documents">
+      <div class="ctx" id="ctx" hidden></div>
       <div class="board">
         <span class="lbl">Case state <span id="asOf" class="mono" style="color:var(--ink-faint)"></span></span>
         <div class="grid" id="board"></div>
@@ -391,7 +399,28 @@ async function pollCase(id, profLabel){
 function flash(msg){ const h = $('#hint'); h.textContent = msg; setTimeout(() => h.textContent = h.dataset.def, 3200); }
 
 /* ---------- render ---------- */
-function renderAll(){ renderLegend(); renderTurns(); renderTimeline(); renderBoard(); renderTabs(); renderDoc(); syncPlay(); }
+function renderAll(){ renderContext(); renderLegend(); renderTurns(); renderTimeline(); renderBoard(); renderTabs(); renderDoc(); syncPlay(); }
+
+function renderContext(){
+  const host = $('#ctx'); host.innerHTML = '';
+  const c = PI.D.context || {};
+  const src = c.sources || {};
+  const rows = [
+    ['procedure', c.planned_procedure, src.planned_procedure],
+    ['indication', c.indication, src.indication],
+    ['allergies', (c.allergies || []).join(', '), src.allergies, true],
+    ['home meds', (c.home_medications || []).join(', '), src.home_medications],
+    ['problems', (c.problem_list || []).join(', '), src.problem_list],
+  ].filter(r => r[1]);
+  if (!rows.length){ host.hidden = true; return; }
+  host.hidden = false;
+  rows.forEach(([k, v, s, allergy]) => {
+    const row = el('div', 'row' + (allergy ? ' allergy' : ''));
+    row.append(el('span', 'k', k), el('span', 'v', v));
+    if (s) { const b = el('span', 'src' + (s === 'ehr' ? ' ehr' : ''), s === 'ehr' ? 'EHR' : 'heard'); row.append(b); }
+    host.append(row);
+  });
+}
 
 function stateAt(t){
   const ss = PI.D.states;

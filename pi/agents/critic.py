@@ -11,7 +11,7 @@ import difflib
 
 from ..casefile import CaseFile
 from ..llm import CRITIC_MODEL, complete, complete_json, info
-from ._projection import ProjectionAgent, state_digest, timeline_digest
+from ._projection import ProjectionAgent, context_digest, state_digest, timeline_digest
 from .base import Agent
 
 SYSTEM = """You are a clinical fact-checker for auto-generated OR documents. You receive a SOURCE
@@ -89,12 +89,11 @@ class CriticAgent(Agent):
     # ---- pieces the orchestrator graph drives one at a time ------------------
     def build_source(self, cf: CaseFile) -> str:
         tbi = {t.id: t for t in cf.turns}
-        ctx = cf.context.model_dump(exclude_none=True, exclude={"evidence_turn_ids"}) if cf.context else {}
         timeline = timeline_digest(cf.events, tbi)
         if len(timeline) > 8000:
             timeline = timeline[:8000] + "\n... [timeline truncated]"
         return (
-            f"CASE CONTEXT:\n{ctx}\n\n"
+            f"CASE CONTEXT:\n{context_digest(cf)}\n\n"
             f"CASE STATE:\n{state_digest(cf.final_state())}\n\n"
             f"TIMELINE:\n{timeline}"
         )

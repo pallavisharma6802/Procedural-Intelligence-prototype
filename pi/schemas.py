@@ -125,12 +125,20 @@ class CaseState(BaseModel):
 
 
 class CaseContext(BaseModel):
-    """Set-up facts stated early in the case. No patient name - descriptor only."""
+    """Set-up facts for the case. No patient name - descriptor only.
+
+    Fields are filled from a connected clinical-context MCP server when one is available,
+    otherwise inferred from the transcript. `sources` records which per field.
+    """
 
     patient_descriptor: Optional[str] = None  # "54-year-old man"
     planned_procedure: Optional[str] = None
     indication: Optional[str] = None  # preoperative diagnosis
     anesthesia_type: Optional[str] = None
+    allergies: list[str] = Field(default_factory=list)
+    home_medications: list[str] = Field(default_factory=list)
+    problem_list: list[str] = Field(default_factory=list)
+    sources: dict[str, str] = Field(default_factory=dict)  # field -> "ehr" | "transcript"
     evidence_turn_ids: list[str] = Field(default_factory=list)
 
 

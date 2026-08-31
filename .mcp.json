@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "clinical-context": {
+      "command": "python3",
+      "args": ["mcp_servers/clinical_context_server.py"]
+    }
+  }
+}

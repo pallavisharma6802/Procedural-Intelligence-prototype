@@ -33,6 +33,14 @@ def state_digest(s: CaseState) -> str:
     return json.dumps(d, indent=2, default=str)
 
 
+def context_digest(cf: CaseFile) -> str:
+    if not cf.context:
+        return "{}"
+    d = cf.context.model_dump(exclude={"evidence_turn_ids", "sources"})
+    d = {k: v for k, v in d.items() if v}
+    return json.dumps(d, indent=2) or "{}"
+
+
 class ProjectionAgent(Agent):
     """Subclasses implement `build_system(profile)`. `run` and the critic both call it."""
 
@@ -59,9 +67,8 @@ class ProjectionAgent(Agent):
             )
             cf.log(self.name, "skipped - 0 events")
             return cf
-        ctx = cf.context.model_dump(exclude_none=True, exclude={"evidence_turn_ids"}) if cf.context else {}
         user = (
-            f"CASE CONTEXT:\n{json.dumps(ctx, indent=2) or '{}'}\n\n"
+            f"CASE CONTEXT:\n{context_digest(cf)}\n\n"
             f"CASE STATE (final):\n{state_digest(final)}\n\n"
             f"EVENT TIMELINE (with transcript evidence):\n{timeline_digest(cf.events, tbi)}\n\n"
             "Write the document now. Use only facts present above. If something a section "

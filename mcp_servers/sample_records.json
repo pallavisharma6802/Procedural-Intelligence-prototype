@@ -1,0 +1,44 @@
+[
+  {
+    "patient_id": "P-4471",
+    "descriptor": "54-year-old man",
+    "indication": "acute calculous cholecystitis",
+    "aliases": ["lap chole", "cholecystectomy", "gallbladder"],
+    "scheduled_procedure": {
+      "procedure": "laparoscopic cholecystectomy, possible conversion to open",
+      "surgeon": "Dr. A. Okafor",
+      "anaesthesia_plan": "general endotracheal"
+    },
+    "home_medications": ["lisinopril 10 mg daily", "atorvastatin 40 mg nightly", "aspirin 81 mg daily"],
+    "allergies": ["penicillin (rash)", "shellfish"],
+    "problem_list": ["hypertension", "hyperlipidaemia", "cholelithiasis", "type 2 diabetes"]
+  },
+  {
+    "patient_id": "P-8820",
+    "descriptor": "68-year-old woman",
+    "indication": "end-stage osteoarthritis, right knee",
+    "aliases": ["tka", "knee replacement", "arthroplasty"],
+    "scheduled_procedure": {
+      "procedure": "right total knee arthroplasty",
+      "surgeon": "Dr. L. Bianchi",
+      "anaesthesia_plan": "spinal with sedation"
+    },
+    "home_medications": ["metformin 1 g twice daily", "amlodipine 5 mg daily", "paracetamol PRN"],
+    "allergies": ["codeine (nausea)"],
+    "problem_list": ["osteoarthritis", "type 2 diabetes", "hypertension", "obesity"]
+  },
+  {
+    "patient_id": "P-1093",
+    "descriptor": "61-year-old man",
+    "indication": "non-ST-elevation myocardial infarction",
+    "aliases": ["nstemi", "pci", "angiography", "coronary"],
+    "scheduled_procedure": {
+      "procedure": "coronary angiography and possible percutaneous coronary intervention",
+      "surgeon": "Dr. R. Mehta",
+      "anaesthesia_plan": "conscious sedation"
+    },
+    "home_medications": ["aspirin 81 mg daily", "metoprolol 25 mg twice daily", "rosuvastatin 20 mg nightly"],
+    "allergies": ["iodinated contrast (mild urticaria) - premedicated"],
+    "problem_list": ["coronary artery disease", "hypertension", "former smoker"]
+  }
+]

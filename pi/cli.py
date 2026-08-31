@@ -66,6 +66,25 @@ def serve(host: str = "127.0.0.1", port: int = 8000):
 
 
 @app.command()
+def mcp():
+    """Show the clinical-context MCP servers the pipeline will use."""
+    from .mcp_client import load_pool
+
+    async def _check():
+        pool = load_pool()
+        if not pool.enabled:
+            rprint("[dim]no MCP servers configured (set PI_MCP_CONFIG or add ./.mcp.json)[/dim]")
+            return
+        async with pool as p:
+            for s in p.servers:
+                rprint(f"  [bold]{s.name}[/bold]  {', '.join(t['name'] for t in s.tools)}")
+            if not p.servers:
+                rprint("[red]configured servers failed to start[/red]")
+
+    asyncio.run(_check())
+
+
+@app.command()
 def stage(name: str, case_id: str, profile: str = typer.Option(None, "--profile", "-p")):
     """Re-run a single agent (or 'understand'/'projections') on an existing run."""
     cf = CaseFile.load(case_id)

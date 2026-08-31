@@ -54,7 +54,7 @@ def profiles():
     """List available site profiles."""
     for name in available():
         p = SiteProfile.load(name)
-        rprint(f"  [bold]{p.id}[/bold]  — {p.label}  [dim]({p.care_setting}, {p.handoff.name} handoff)[/dim]")
+        rprint(f"  [bold]{p.id}[/bold]  - {p.label}  [dim]({p.care_setting}, {p.handoff.name} handoff)[/dim]")
 
 
 @app.command()
@@ -108,7 +108,7 @@ def show(case_id: str, what: str = typer.Argument("state")):
                     continue
                 quotes = " | ".join(tbi[i].text for i in ev.evidence_turn_ids if i in tbi)
                 rprint(f"  [dim]{ev.clock}[/dim] {ev.type.value} {json.dumps(ev.payload)}")
-                rprint(f"    [dim]“{quotes}”[/dim]")
+                rprint(f"    [dim]{quotes!r}[/dim]")
     elif what in ("handoff", "opnote", "family"):
         d = cf.drafts.get(what)
         if not d:
@@ -150,7 +150,7 @@ def evaluate(case_id: str):
             got is not None and abs(float(got) - float(v)) < 1e-6
         )
         ok += hit
-        rprint(f"  [{'green' if hit else 'red'}]{'✓' if hit else '✗'}[/] state.{k}: want={v!r}  got={got!r}")
+        rprint(f"  [{'green' if hit else 'red'}]{'ok' if hit else 'x'}[/] state.{k}: want={v!r}  got={got!r}")
     covered = len(set(want_types) & set(got_types))
     rprint(
         f"\n[bold]score[/bold]  event-types {covered}/{len(want_types)}   "

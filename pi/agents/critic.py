@@ -104,8 +104,8 @@ class CriticAgent(Agent):
         for k, d in cf.drafts.items():
             if _not_generated(d):
                 d.accepted = False
-                d.unsupported_claims = ["draft not generated (LLM call failed) — rerun this stage"]
-                cf.log(self.name, f"{k}: skipped — not generated")
+                d.unsupported_claims = ["draft not generated (LLM call failed) - rerun this stage"]
+                cf.log(self.name, f"{k}: skipped - not generated")
             else:
                 keep[k] = d
         return keep
@@ -127,9 +127,9 @@ class CriticAgent(Agent):
         drafts = self.checkable(cf)
         if results is None:
             for d in drafts.values():
-                d.unsupported_claims = ["critic did not run — draft NOT fact-checked"]
+                d.unsupported_claims = ["critic did not run - draft NOT fact-checked"]
                 d.accepted = False
-            cf.log(self.name, "check unavailable — drafts marked NOT fact-checked")
+            cf.log(self.name, "check unavailable - drafts marked NOT fact-checked")
             return
         for k, draft in drafts.items():
             draft.unsupported_claims = results.get(k, [])
@@ -154,7 +154,7 @@ class CriticAgent(Agent):
         combined = f"SOURCE:\n{source}\n\n{_fmt_docs(drafts)}"
         if len(combined) <= 12000 and len(drafts) > 1:
             return await self._check_call(SYSTEM, combined, drafts)
-        # too big for one request (or a single draft) — check each on its own, merge
+        # too big for one request (or a single draft) - check each on its own, merge
         out: dict[str, list[str]] = {}
         any_ok = False
         for k, d in drafts.items():
@@ -185,11 +185,11 @@ class CriticAgent(Agent):
                 else:
                     continue
                 if q and not _appears_in(q, draft.text):
-                    continue  # critic invented a quote that isn't in the doc — drop it
+                    continue  # critic invented a quote that isn't in the doc - drop it
                 if _self_negated(r):
                     continue  # critic talked itself out of this one
                 r = r.split(". ")[0][:200]  # first sentence, in case it rambled
-                issues.append(f"{q} — {r}".strip(" —") if q else r)
+                issues.append(f"{q} - {r}".strip(" -") if q else r)
             out[kind] = [i for i in issues if i]
         return out
 
@@ -198,7 +198,7 @@ class CriticAgent(Agent):
         bullet = "\n".join(f"- {i}" for i in issues)
         user = (
             f"{source}\n\nYour previous draft stated facts NOT supported by the source:\n{bullet}\n\n"
-            f"Rewrite the {kind} document. Remove or correct each unsupported fact — replace an "
+            f"Rewrite the {kind} document. Remove or correct each unsupported fact - replace an "
             "unknowable specific with 'not documented'. Keep everything else, including standard "
             "monitoring guidance and required template lines. Output only the document."
         )

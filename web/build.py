@@ -39,8 +39,8 @@ def main(cases):
     (WEB / "artifact.html").write_text(artifact, encoding="utf-8")
 
     kb = lambda p: round((WEB / p).stat().st_size / 1024)
-    print(f"  {len(bundle)} cases  ·  bundle {kb('_bundle.json')} KB  ·  "
-          f"standalone {kb('standalone.html')} KB  ·  artifact {kb('artifact.html')} KB")
+    print(f"  {len(bundle)} cases  -  bundle {kb('_bundle.json')} KB  -  "
+          f"standalone {kb('standalone.html')} KB  -  artifact {kb('artifact.html')} KB")
 
 
 if __name__ == "__main__":

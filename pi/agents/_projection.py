@@ -1,6 +1,6 @@
 """Shared machinery for the three draft-generating agents (handoff / opnote / family).
 
-Each agent's system prompt is *built from the active SiteProfile* — the pipeline code is the
+Each agent's system prompt is *built from the active SiteProfile* - the pipeline code is the
 same for every hospital; only the profile (handoff format, note headings, terminology, family
 style) changes.
 """
@@ -53,11 +53,11 @@ class ProjectionAgent(Agent):
         if not cf.events:
             cf.drafts[self.kind] = Draft(
                 kind=self.kind,
-                text=f"[no {self.kind}: the pipeline extracted 0 events from this recording — "
+                text=f"[no {self.kind}: the pipeline extracted 0 events from this recording - "
                 "the transcript may be too short, too noisy, or not clinical]",
                 unsupported_claims=["no events extracted"],
             )
-            cf.log(self.name, "skipped — 0 events")
+            cf.log(self.name, "skipped - 0 events")
             return cf
         ctx = cf.context.model_dump(exclude_none=True, exclude={"evidence_turn_ids"}) if cf.context else {}
         user = (
@@ -75,7 +75,7 @@ class ProjectionAgent(Agent):
             print(f"  [{self.name}] generation failed: {exc}")
             cf.drafts[self.kind] = Draft(
                 kind=self.kind,
-                text=f"[{self.kind} not generated — LLM call failed: {exc}]",
+                text=f"[{self.kind} not generated - LLM call failed: {exc}]",
                 unsupported_claims=["draft not generated"],
             )
             cf.log(self.name, f"generation FAILED: {exc}")

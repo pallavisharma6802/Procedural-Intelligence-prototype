@@ -1,8 +1,8 @@
-"""Site profile — everything that varies between hospitals and care settings.
+"""Site profile - everything that varies between hospitals and care settings.
 
 The core pipeline is fixed: the same agent graph, the same `ProceduralEvent` vocabulary,
-the same `CaseState` fields. A `SiteProfile` declares only the *local* conventions —
-phase names, handoff format, note headings, family-letter style, terminology — so one
+the same `CaseState` fields. A `SiteProfile` declares only the *local* conventions -
+phase names, handoff format, note headings, family-letter style, terminology - so one
 deployment differs from another by its profile, never by code.
 
 Select one with `PI_PROFILE=<name-or-path>` (env) or `pi run --profile <name>`.
@@ -79,7 +79,7 @@ class SiteProfile(BaseModel):
         if not self.terminology:
             return ""
         pairs = "; ".join(f'say "{v}" not "{k}"' for k, v in self.terminology.items())
-        return f"LOCAL TERMINOLOGY — {pairs}."
+        return f"LOCAL TERMINOLOGY - {pairs}."
 
     def canonical_phase(self, name: str | None) -> str | None:
         if not name:
@@ -99,7 +99,7 @@ class SiteProfile(BaseModel):
         if name_or_path == "default_or":
             return cls()  # usable even if the file is missing
         raise FileNotFoundError(
-            f"unknown profile {name_or_path!r} — available: {', '.join(available())}"
+            f"unknown profile {name_or_path!r} - available: {', '.join(available())}"
         )
 
 

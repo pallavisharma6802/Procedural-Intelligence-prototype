@@ -54,7 +54,7 @@ def _post_with_retry(url: str, *, tries: int = None, **kw) -> httpx.Response:
             r.raise_for_status()
             return r
         wait = float(r.headers.get("retry-after", 0) or 0) or min(2 ** attempt, 12)
-        if wait > _MAX_BACKOFF:  # e.g. daily-quota 429 says "try again in 31m" — don't block
+        if wait > _MAX_BACKOFF:  # e.g. daily-quota 429 says "try again in 31m" - don't block
             r.raise_for_status()
         time.sleep(wait + random.uniform(0.2, 1.0))
     return r  # unreachable

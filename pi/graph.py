@@ -1,17 +1,11 @@
 """LangGraph orchestration of the agent pipeline.
 
-    ingest → roles → context → extract → reduce → handoff → opnote → family → critic_check
-                                                                                │
-                                                      ┌── flagged & round 0 ────┤
-                                                      ▼                         │
-                                                critic_revise ──────────────────┘
-                                                      │ (else)
-                                                      ▼
-                                                critic_finalize → END
+    ingest -> roles -> context -> extract -> reduce -> handoff -> opnote -> family -> critic_check
+                                                          flagged, round 0 -> critic_revise -> (back to check)
+                                                                         else -> critic_finalize -> END
 
-The pipeline is mostly linear (one writer per super-step lets us pass the CaseFile
-through a single channel). The one real branch is the critic's check→revise→re-check
-loop, expressed as a conditional edge.
+The pipeline is linear except for the critic's check/revise/re-check loop, which is a
+conditional edge. One writer per super-step lets the CaseFile ride a single channel.
 """
 
 from __future__ import annotations
@@ -172,7 +166,7 @@ async def run_pipeline(cf: CaseFile, *, upto: str = "critic", verbose: bool = Tr
             if payload and "cf" in payload:
                 cf = payload["cf"]
             if verbose:
-                print(f"  ✓ {node}")
+                print(f"  ok {node}")
             if node in stop_nodes and STOP_LABELS[node] == upto:
                 return cf
     return cf

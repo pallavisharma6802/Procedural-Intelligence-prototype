@@ -126,7 +126,7 @@ def _apply(prev: CaseState, ev: ProceduralEvent, pm: _PhaseModel) -> CaseState:
         if p.get("intentional"):
             detail = p.get("detail") or "items intentionally retained for damage control"
             s.counts = f"{p['status']} (intentional: {detail})"
-            s.open_concerns.append(f"retained surgical items — intentional: {detail}")
+            s.open_concerns.append(f"retained surgical items - intentional: {detail}")
         _prov(s, "counts", ev)
     elif ev.type == EventType.complication and p.get("description"):
         s.complications.append(Complication(description=p["description"], t_s=ev.t_start_s, resolved=p.get("resolved")))

@@ -2,12 +2,12 @@
 pipeline never knows whether it started from a caption file or a recording.
 
 Backends (PI_STT=...):
-  groq        (default)  Groq whisper-large-v3 — transcription only, no speakers
-  assemblyai            AssemblyAI — transcription + speaker diarization in one call
-  deepgram             Deepgram nova — transcription + diarization in one call
+  groq        (default)  Groq whisper-large-v3 - transcription only, no speakers
+  assemblyai            AssemblyAI - transcription + speaker diarization in one call
+  deepgram             Deepgram nova - transcription + diarization in one call
   local                faster-whisper on this machine (offline; `pip install '.[local-stt]'`)
 
-The `roles` agent maps raw diarization speaker labels (A/B/…, SPEAKER_01) to clinical roles.
+The `roles` agent maps raw diarization speaker labels (A/B/..., SPEAKER_01) to clinical roles.
 Local pyannote / NeMo Sortformer diarization is a future backend.
 """
 

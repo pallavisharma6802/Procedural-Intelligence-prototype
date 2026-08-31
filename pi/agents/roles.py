@@ -51,7 +51,7 @@ class RolesAgent(Agent):
     async def run(self, cf: CaseFile) -> CaseFile:
         speakers = [t.speaker for t in cf.turns if t.speaker]
         if not speakers:
-            cf.log(self.name, "no speaker labels — skipped")
+            cf.log(self.name, "no speaker labels - skipped")
             return cf
 
         mapping: dict[str, str] = {}

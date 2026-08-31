@@ -1,9 +1,10 @@
 .venv/
 __pycache__/
 *.pyc
+*.pyo
 .env
+.DS_Store
 runs/
 MM-OR_data/
-.DS_Store
 *.zip
 web/node_modules/

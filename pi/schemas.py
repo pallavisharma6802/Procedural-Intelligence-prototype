@@ -77,7 +77,7 @@ class ProceduralEvent(BaseModel):
         return _sec_to_clock(self.t_start_s)
 
 
-# Phase vocabulary is not fixed here — it belongs to the active SiteProfile
+# Phase vocabulary is not fixed here - it belongs to the active SiteProfile
 # (see pi/profile.py). `CaseState.phase` is just whatever string that profile uses.
 
 
@@ -125,7 +125,7 @@ class CaseState(BaseModel):
 
 
 class CaseContext(BaseModel):
-    """Set-up facts stated early in the case. No patient name — descriptor only."""
+    """Set-up facts stated early in the case. No patient name - descriptor only."""
 
     patient_descriptor: Optional[str] = None  # "54-year-old man"
     planned_procedure: Optional[str] = None

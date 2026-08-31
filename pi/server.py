@@ -162,5 +162,5 @@ def demo():
 def serve(host: str = "127.0.0.1", port: int = 8000) -> None:
     import uvicorn
 
-    print(f"Procedural Intelligence — http://{host}:{port}")
+    print(f"Procedural Intelligence - http://{host}:{port}")
     uvicorn.run(app, host=host, port=port, log_level="warning")

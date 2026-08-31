@@ -25,6 +25,6 @@ class OpNoteAgent(ProjectionAgent):
             "Brief narrative: 3-6 sentences, chronological, only from the timeline.\n\n"
             "Write 'not documented' for any heading the timeline does not support, and "
             "'none documented' under Complications if there were none. This is a DRAFT for "
-            "clinician review — do not invent operative detail that is not in the timeline."
+            "clinician review - do not invent operative detail that is not in the timeline."
             f"{gloss}"
         )

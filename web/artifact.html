@@ -2,18 +2,15 @@
 <title>Procedural Intelligence</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&display=swap" rel="stylesheet" />
 <style>
 :root{
   --ground:#F5F7F6; --surface:#FFFFFF; --surface-2:#EEF2F0;
   --ink:#132420; --ink-soft:#5A6C67; --ink-faint:#94A39D;
   --line:#DEE4E1; --line-strong:#C7D0CC;
-  --accent:#0B6E63; --accent-ink:#08514A; --accent-wash:rgba(11,110,99,.09); --accent-line:rgba(11,110,99,.28);
+  --accent:#0B6E63; --accent-ink:#08514A; --accent-wash:rgba(11,110,99,.10);
   --ok:#2E7D5B; --watch:#A9761A; --alert:#B23B32;
-  --r-surgeon:#0B6E63; --r-anesthesia:#8A5A1E; --r-circulating_nurse:#3C6FA0; --r-scrub_nurse:#6B4E9E; --r-assistant:#4A8C7C; --r-perfusionist:#B23B32; --r-other:#94A39D;
-  --ph-cool:#7d8f96; --ph-mid:#9a8f6f; --ph-warm:#a8794f; --ph-close:#6f8a84;
-  --shadow:0 1px 2px rgba(19,36,32,.05),0 6px 24px rgba(19,36,32,.06);
-  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
   --sans:"IBM Plex Sans",system-ui,-apple-system,sans-serif;
   --serif:"Source Serif 4",Georgia,"Times New Roman",serif;
 }
@@ -21,249 +18,150 @@
   --ground:#0C1211; --surface:#131B19; --surface-2:#0F1615;
   --ink:#E4EBE8; --ink-soft:#8FA09A; --ink-faint:#5E6E68;
   --line:#26312E; --line-strong:#334039;
-  --accent:#3FBFAE; --accent-ink:#6FD6C7; --accent-wash:rgba(63,191,174,.10); --accent-line:rgba(63,191,174,.30);
+  --accent:#3FBFAE; --accent-ink:#6FD6C7; --accent-wash:rgba(63,191,174,.12);
   --ok:#4FB489; --watch:#D0A24E; --alert:#E0716A;
-  --r-surgeon:#3FBFAE; --r-anesthesia:#D0A24E; --r-circulating_nurse:#6FA6D8; --r-scrub_nurse:#A98BDA; --r-assistant:#63C7B4; --r-perfusionist:#E0716A; --r-other:#5E6E68;
-  --ph-cool:#8794a0; --ph-mid:#a89a76; --ph-warm:#c08a5c; --ph-close:#7f9a94;
-  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 30px rgba(0,0,0,.35);
 }}
 :root[data-theme="dark"]{
   --ground:#0C1211; --surface:#131B19; --surface-2:#0F1615;
   --ink:#E4EBE8; --ink-soft:#8FA09A; --ink-faint:#5E6E68;
   --line:#26312E; --line-strong:#334039;
-  --accent:#3FBFAE; --accent-ink:#6FD6C7; --accent-wash:rgba(63,191,174,.10); --accent-line:rgba(63,191,174,.30);
+  --accent:#3FBFAE; --accent-ink:#6FD6C7; --accent-wash:rgba(63,191,174,.12);
   --ok:#4FB489; --watch:#D0A24E; --alert:#E0716A;
-  --r-surgeon:#3FBFAE; --r-anesthesia:#D0A24E; --r-circulating_nurse:#6FA6D8; --r-scrub_nurse:#A98BDA; --r-assistant:#63C7B4; --r-perfusionist:#E0716A; --r-other:#5E6E68;
-  --ph-cool:#8794a0; --ph-mid:#a89a76; --ph-warm:#c08a5c; --ph-close:#7f9a94;
-  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 30px rgba(0,0,0,.35);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 [hidden]{display:none!important}
 html,body{height:100%}
-body{
-  background:var(--ground); color:var(--ink); font-family:var(--sans);
-  font-size:14px; line-height:1.5; -webkit-font-smoothing:antialiased;
-  overflow:hidden;
-}
-.mono{font-family:var(--mono)}
-.tnum{font-variant-numeric:tabular-nums}
-button{font-family:inherit;font-size:inherit;color:inherit;background:none;border:none;cursor:pointer}
+body{background:var(--ground);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased;overflow:hidden}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:3px}
 ::selection{background:var(--accent-wash)}
+.tnum{font-variant-numeric:tabular-nums}
 
-/* ---- shell ---- */
-.app{display:flex;flex-direction:column;height:100vh}
-.bar{
-  display:flex;align-items:center;gap:14px;padding:0 16px;height:52px;
-  border-bottom:1px solid var(--line);background:var(--surface);flex:none;white-space:nowrap;
-}
-.mark{display:flex;align-items:baseline;gap:9px;flex:none}
-.mark b{font-family:var(--serif);font-weight:600;font-size:15px;letter-spacing:-.01em;white-space:nowrap}
-.mark span{font-family:var(--mono);font-size:10px;color:var(--ink-faint);letter-spacing:.05em;text-transform:uppercase}
-@media (max-width:1240px){.mark span{display:none}}
-.bar .sel{flex:none}
+.app{display:flex;flex-direction:column;height:100vh;opacity:0}
+.app.in{opacity:1;transition:opacity .35s ease}
+
+/* header */
+.bar{display:flex;align-items:center;gap:12px;padding:0 16px;height:50px;border-bottom:1px solid var(--line);background:var(--surface);flex:none}
+.bar h1{font-family:var(--serif);font-weight:600;font-size:15px;white-space:nowrap}
+select{font-family:var(--sans);font-size:12.5px;color:var(--ink);background:var(--surface-2);border:1px solid var(--line);border-radius:7px;padding:6px 28px 6px 10px;appearance:none;cursor:pointer;
+  background-image:linear-gradient(45deg,transparent 50%,var(--ink-soft) 50%),linear-gradient(135deg,var(--ink-soft) 50%,transparent 50%);
+  background-position:calc(100% - 15px) 12px,calc(100% - 10px) 12px;background-size:5px 5px;background-repeat:no-repeat}
 .bar .spacer{flex:1}
-select,.pill{
-  font-family:var(--mono);font-size:12px;color:var(--ink);
-  background:var(--surface-2);border:1px solid var(--line);border-radius:6px;
-  padding:6px 10px;appearance:none;cursor:pointer;
-}
-select{padding-right:26px;background-image:linear-gradient(45deg,transparent 50%,var(--ink-soft) 50%),linear-gradient(135deg,var(--ink-soft) 50%,transparent 50%);background-position:calc(100% - 14px) 12px,calc(100% - 9px) 12px;background-size:5px 5px,5px 5px;background-repeat:no-repeat}
-.iconbtn{width:32px;height:32px;display:grid;place-items:center;border-radius:6px;color:var(--ink-soft)}
-.iconbtn:hover{background:var(--surface-2);color:var(--ink)}
-.lbl{font-family:var(--mono);font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-faint)}
+.themebtn{width:32px;height:32px;display:grid;place-items:center;border-radius:7px;color:var(--ink-soft)}
+.themebtn:hover{background:var(--surface-2);color:var(--ink)}
 
-.cols{flex:1;display:grid;grid-template-columns:26fr 40fr 34fr;min-height:0}
-.col{border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0;background:var(--surface)}
-.col:last-child{border-right:none}
-.col-head{
-  flex:none;padding:11px 14px;border-bottom:1px solid var(--line);
-  display:flex;align-items:center;gap:10px;justify-content:space-between;background:var(--surface);
-}
-.col-body{flex:1;overflow-y:auto;overscroll-behavior:contain}
-.col-body::-webkit-scrollbar{width:9px}
-.col-body::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:5px;border:2px solid var(--surface)}
+/* body: two panes */
+.panes{flex:1;display:grid;grid-template-columns:40fr 60fr;min-height:0}
+.pane{display:flex;flex-direction:column;min-height:0;background:var(--surface)}
+.pane.left{border-right:1px solid var(--line)}
+.pane-head{flex:none;display:flex;align-items:baseline;gap:8px;padding:12px 16px 8px}
+.pane-head h2{font-size:12px;font-weight:600;letter-spacing:.02em;text-transform:uppercase;color:var(--ink-soft)}
+.pane-head .sub{font-family:var(--mono);font-size:11px;color:var(--ink-faint)}
+.scroll{flex:1;overflow-y:auto;overscroll-behavior:contain}
+.scroll::-webkit-scrollbar{width:10px}
+.scroll::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:5px;border:3px solid var(--surface)}
 
-/* ---- transcript ---- */
-.legend{display:flex;flex-wrap:wrap;gap:5px;padding:9px 12px;border-bottom:1px solid var(--line)}
-.rchip{
-  font-family:var(--mono);font-size:10px;letter-spacing:.02em;padding:3px 7px;border-radius:999px;
-  border:1px solid var(--line);color:var(--ink-soft);display:flex;align-items:center;gap:5px;
-}
-.rchip .dot{width:7px;height:7px;border-radius:50%}
-.rchip[aria-pressed="true"]{border-color:var(--accent-line);color:var(--ink);background:var(--accent-wash)}
-.rchip.off{opacity:.35}
-.search{margin:9px 12px;width:calc(100% - 24px);font-family:var(--mono);font-size:12px;padding:7px 9px;border:1px solid var(--line);border-radius:6px;background:var(--surface-2);color:var(--ink)}
-.turns{padding:4px 0 40px}
-.turn{
-  display:grid;grid-template-columns:52px 3px 1fr;gap:9px;padding:6px 14px 6px 12px;
-  font-family:var(--mono);font-size:12px;line-height:1.55;cursor:default;
-  border-left:2px solid transparent;transition:background .12s;
-}
+/* transcript */
+.turn{display:grid;grid-template-columns:46px 1fr;gap:10px;padding:5px 16px 5px 14px;border-left:2px solid transparent;transition:background .1s}
 .turn:hover{background:var(--surface-2)}
 .turn.hot{background:var(--accent-wash);border-left-color:var(--accent)}
-.turn.dim{opacity:.32}
-.turn .t{color:var(--ink-faint);font-size:10.5px;padding-top:2px}
-.turn .spine{border-radius:2px;background:var(--r-other)}
-.turn .body .who{font-size:9.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-soft);display:block;margin-bottom:1px}
-.turn .body .tx{color:var(--ink)}
+.turn.dim{opacity:.34}
+.turn .t{font-family:var(--mono);font-size:10.5px;color:var(--ink-faint);padding-top:3px}
+.turn .who{font-size:11px;font-weight:600;color:var(--accent-ink)}
+.turn .tx{color:var(--ink);font-size:13.5px}
 
-/* ---- timeline ---- */
-.transport{display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid var(--line);flex:none}
-.play{width:30px;height:30px;border-radius:50%;border:1px solid var(--line-strong);display:grid;place-items:center;color:var(--ink);background:var(--surface-2);font-size:11px}
+/* patient line */
+.patient{flex:none;padding:10px 18px;border-bottom:1px solid var(--line);font-size:12.5px;color:var(--ink-soft);line-height:1.5}
+.patient b{color:var(--ink);font-weight:600}
+.patient .tag{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:var(--accent-ink);border:1px solid var(--accent);border-radius:3px;padding:0 4px;margin-left:5px}
+.patient .warn{color:var(--alert);font-weight:600}
+
+/* tabs */
+.tabs{flex:none;display:flex;gap:4px;padding:8px 16px 0;border-bottom:1px solid var(--line)}
+.tab{font-size:12.5px;padding:8px 13px;border-radius:8px 8px 0 0;color:var(--ink-soft);border:1px solid transparent;border-bottom:none;display:flex;align-items:center;gap:7px}
+.tab:hover{color:var(--ink)}
+.tab[aria-selected="true"]{color:var(--ink);font-weight:600;border-color:var(--line);background:var(--surface);position:relative;top:1px}
+.tab .fmt{font-family:var(--mono);font-size:9px;color:var(--ink-faint)}
+.tab .dot{width:6px;height:6px;border-radius:50%}
+.tab .dot.ok{background:var(--ok)} .tab .dot.flag{background:var(--alert)}
+
+/* timeline tab */
+.tlwrap{padding:14px 18px 40px}
+.snap{font-family:var(--mono);font-size:11.5px;color:var(--ink-soft);background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:9px 12px;margin-bottom:16px;line-height:1.7}
+.snap b{color:var(--ink)}
+.snap .sev-stable{color:var(--ok)} .snap .sev-watcher{color:var(--watch)} .snap .sev-unstable{color:var(--alert);font-weight:600}
+.ev{display:grid;grid-template-columns:52px 1fr;gap:12px;padding:7px 8px;border-radius:7px;cursor:default;transition:background .1s,opacity .15s}
+.ev:hover{background:var(--surface-2)}
+.ev.hot{background:var(--accent-wash)}
+.ev.future{opacity:.3}
+.ev .clk{font-family:var(--mono);font-size:11px;color:var(--ink-faint);padding-top:2px;text-align:right}
+.ev .txt{font-size:13.5px;color:var(--ink)}
+.ev .txt .kind{color:var(--ink-soft);font-size:11px;text-transform:uppercase;letter-spacing:.03em;margin-right:6px}
+.tl-empty{padding:50px 20px;text-align:center;color:var(--ink-faint);font-size:13px;line-height:1.9}
+
+/* document tab */
+.doc{padding:20px 26px 60px;font-family:var(--serif);font-size:15.5px;line-height:1.7;color:var(--ink);max-width:66ch}
+.doc p{margin:0 0 11px}
+.doc .lead{font-family:var(--sans);font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--accent-ink);margin-right:6px}
+.doc .lk{border-bottom:1px solid var(--accent);cursor:pointer;transition:background .1s}
+.doc .lk:hover,.doc .lk.hot{background:var(--accent-wash)}
+.doc .flags{font-family:var(--sans);font-size:12.5px;color:var(--alert);background:color-mix(in srgb,var(--alert) 8%,transparent);border:1px solid color-mix(in srgb,var(--alert) 22%,transparent);border-radius:8px;padding:10px 12px;margin-bottom:16px}
+.doc .flags ul{margin:4px 0 0 18px}
+.doc.empty{font-family:var(--sans);color:var(--ink-faint);font-size:13px}
+
+/* transport */
+.transport{flex:none;display:flex;align-items:center;gap:14px;padding:10px 18px;border-top:1px solid var(--line);background:var(--surface)}
+.play{width:34px;height:34px;flex:none;border-radius:50%;border:1px solid var(--line-strong);display:grid;place-items:center;color:var(--ink);background:var(--surface-2);font-size:12px}
 .play:hover{border-color:var(--accent);color:var(--accent)}
 .scrub{flex:1;height:6px;border-radius:3px;background:var(--line);position:relative;cursor:pointer}
 .scrub .fill{position:absolute;left:0;top:0;bottom:0;background:var(--accent);border-radius:3px}
-.scrub .knob{position:absolute;top:50%;width:13px;height:13px;border-radius:50%;background:var(--accent);border:2px solid var(--surface);transform:translate(-50%,-50%);box-shadow:0 1px 3px rgba(0,0,0,.2)}
-.tclock{font-family:var(--mono);font-size:11px;color:var(--ink-soft);min-width:76px;text-align:right}
-.tclock b{color:var(--ink)}
-#audioTag{color:var(--accent-ink);border:1px solid var(--accent-line);border-radius:4px;padding:1px 6px;flex:none}
+.scrub .knob{position:absolute;top:50%;width:14px;height:14px;border-radius:50%;background:var(--accent);border:2px solid var(--surface);transform:translate(-50%,-50%)}
+.clk{font-family:var(--mono);font-size:11.5px;color:var(--ink-soft);white-space:nowrap}
+.clk b{color:var(--ink)}
+.audiotag{font-family:var(--mono);font-size:10px;color:var(--accent-ink);border:1px solid var(--accent);border-radius:4px;padding:1px 6px;white-space:nowrap}
+.tip{font-size:11px;color:var(--ink-faint);white-space:nowrap}
 #audio{display:none}
-.tl-wrap{flex:1;overflow-y:auto;position:relative}
-.tl{padding:6px 14px 80px;display:flex;flex-direction:column}
-.tl-phase{
-  display:flex;align-items:center;gap:9px;margin:14px 0 4px;padding-top:8px;
-  position:sticky;top:0;background:linear-gradient(var(--surface) 72%,transparent);z-index:3;
-}
-.tl-phase:first-child{margin-top:2px}
-.tl-phase .sw{width:9px;height:9px;border-radius:3px;flex:none}
-.tl-phase .nm{font-family:var(--mono);font-size:10px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-soft)}
-.tl-phase .ln{flex:1;height:1px;background:var(--line)}
-.tl-gap{font-family:var(--mono);font-size:9.5px;color:var(--ink-faint);text-align:center;padding:5px 0;letter-spacing:.06em}
-.ev{
-  display:grid;grid-template-columns:46px 16px 1fr;gap:8px;padding:6px 8px;border-radius:8px;
-  cursor:pointer;transition:background .12s,opacity .16s;align-items:start;
-}
-.ev:hover{background:var(--surface-2)}
-.ev.hot{background:var(--accent-wash);box-shadow:inset 0 0 0 1px var(--accent-line)}
-.ev.future{opacity:.32;filter:saturate(.4)}
-.ev .clk{font-family:var(--mono);font-size:10px;color:var(--ink-faint);padding-top:3px;text-align:right}
-.ev .rail{position:relative;justify-self:center;width:2px;background:var(--line);align-self:stretch;min-height:22px}
-.ev .rail .node{position:absolute;left:50%;top:5px;transform:translateX(-50%);width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px var(--surface)}
-.ev .rail .node.lowconf{background:var(--surface);border:1.5px solid var(--accent)}
-.ev:first-of-type .rail,.ev.first .rail{background:linear-gradient(transparent 5px,var(--line) 5px)}
-.ev .meta{min-width:0}
-.ev .ty{font-family:var(--mono);font-size:9.5px;letter-spacing:.05em;color:var(--ink-soft);text-transform:uppercase}
-.ev .pl{font-family:var(--mono);font-size:12px;color:var(--ink);word-break:break-word;line-height:1.5}
-.ev .role{font-size:8.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint);margin-top:1px}
-.tl-now{display:flex;align-items:center;gap:8px;margin:6px 0;color:var(--accent);font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase}
-.tl-now .ln{flex:1;height:1px;background:var(--accent-line)}
-.tl-now .dot{width:6px;height:6px;border-radius:50%;background:var(--accent)}
-.tl-empty{padding:56px 30px;text-align:center;color:var(--ink-faint);font-family:var(--mono);font-size:12px;line-height:1.8}
 
-/* ---- state + docs ---- */
-.ctx{padding:11px 14px;border-bottom:1px solid var(--line);flex:none;display:flex;flex-direction:column;gap:5px}
-.ctx .row{display:flex;gap:8px;font-family:var(--mono);font-size:11px;line-height:1.4}
-.ctx .row .k{color:var(--ink-faint);min-width:74px;text-transform:uppercase;letter-spacing:.06em;font-size:9px;padding-top:2px}
-.ctx .row .v{color:var(--ink);flex:1}
-.ctx .row.allergy .v{color:var(--alert)}
-.ctx .src{font-size:8px;letter-spacing:.06em;text-transform:uppercase;border:1px solid var(--line);border-radius:3px;padding:0 4px;color:var(--ink-faint);align-self:center}
-.ctx .src.ehr{color:var(--accent-ink);border-color:var(--accent-line)}
-.board{padding:12px 14px;border-bottom:1px solid var(--line);flex:none}
-.board .grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:9px}
-.stat{border:1px solid var(--line);border-radius:8px;padding:8px 10px;cursor:pointer;transition:border-color .12s,background .12s}
-.stat:hover{border-color:var(--line-strong);background:var(--surface-2)}
-.stat.hot{border-color:var(--accent-line);background:var(--accent-wash)}
-.stat .k{font-family:var(--mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint)}
-.stat .v{font-family:var(--mono);font-size:12px;color:var(--ink);margin-top:3px;line-height:1.38;word-break:break-word;
-  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
-.stat.ghost .v{color:var(--ink-faint);font-style:italic}
-.sev{display:inline-flex;align-items:center;gap:6px}
-.sev .d{width:8px;height:8px;border-radius:50%}
-.sev.stable .d{background:var(--ok)} .sev.watcher .d{background:var(--watch)} .sev.unstable .d{background:var(--alert)}
-
-.docs{flex:1;display:flex;flex-direction:column;min-height:0}
-.tabs{display:flex;gap:2px;padding:9px 14px 0;border-bottom:1px solid var(--line);flex:none}
-.tab{
-  font-family:var(--mono);font-size:11px;letter-spacing:.03em;padding:7px 11px;border-radius:7px 7px 0 0;
-  color:var(--ink-soft);border:1px solid transparent;border-bottom:none;display:flex;align-items:center;gap:7px;
-}
-.tab[aria-selected="true"]{color:var(--ink);border-color:var(--line);background:var(--surface);position:relative;top:1px}
-.tab .fmt{font-size:9px;color:var(--ink-faint)}
-.badge{font-size:9px;letter-spacing:.04em;padding:2px 5px;border-radius:4px;text-transform:uppercase}
-.badge.ok{color:var(--ok);background:color-mix(in srgb,var(--ok) 12%,transparent)}
-.badge.flag{color:var(--alert);background:color-mix(in srgb,var(--alert) 12%,transparent)}
-.doc-note{flex:none;font-family:var(--mono);font-size:10px;color:var(--watch);background:color-mix(in srgb,var(--watch) 9%,transparent);padding:6px 14px;letter-spacing:.02em;border-bottom:1px solid var(--line)}
-.doc-note b{color:var(--ink)}
-.doc{flex:1;overflow-y:auto;padding:18px 22px 60px;font-family:var(--serif);font-size:15px;line-height:1.68;color:var(--ink)}
-.doc h4{font-family:var(--mono);font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-faint);margin:16px 0 4px}
-.doc p{margin:0 0 9px}
-.doc p.sec{margin-bottom:11px}
-.doc .sec-k{font-family:var(--mono);font-size:11px;letter-spacing:.03em;text-transform:uppercase;color:var(--accent-ink);font-weight:600}
-.doc .lk{border-bottom:1px solid var(--accent-line);cursor:pointer;transition:background .12s}
-.doc .lk:hover,.doc .lk.hot{background:var(--accent-wash)}
-.doc .flags{font-family:var(--sans);font-size:12px;color:var(--alert);background:color-mix(in srgb,var(--alert) 8%,transparent);border:1px solid color-mix(in srgb,var(--alert) 25%,transparent);border-radius:8px;padding:9px 11px;margin-bottom:14px}
-.doc .flags li{margin-left:16px}
-.doc.empty{color:var(--ink-faint);font-family:var(--mono);font-size:12px;font-style:normal}
-
-.loading{position:fixed;inset:0;background:var(--ground);display:grid;place-items:center;font-family:var(--mono);font-size:12px;color:var(--ink-soft);z-index:50;letter-spacing:.08em}
-.loading::after{content:"";position:absolute;bottom:0;left:0;height:2px;background:var(--accent);width:0;animation:load 1.4s ease-out forwards}
-@keyframes load{to{width:100%}}
-.app{opacity:0}
-.app.in{opacity:1;transition:opacity .4s ease}
-.hint{padding:7px 14px;font-family:var(--mono);font-size:10px;color:var(--ink-faint);border-top:1px solid var(--line);background:var(--surface);flex:none;letter-spacing:.02em}
-.hint kbd{font-family:var(--mono);background:var(--surface-2);border:1px solid var(--line);border-radius:3px;padding:0 4px;color:var(--ink-soft)}
-@keyframes evpulse{0%{box-shadow:0 0 0 0 var(--accent-line)}70%{box-shadow:0 0 0 6px transparent}100%{box-shadow:0 0 0 0 transparent}}
-.ev.hot .node{animation:evpulse 1s ease-out}
+.loading{position:fixed;inset:0;background:var(--ground);display:grid;place-items:center;font-family:var(--mono);font-size:12px;color:var(--ink-soft);z-index:50}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}.app{opacity:1}}
-@media (max-width:1080px){
-  body{overflow:auto}
-  .app{height:auto;min-height:100vh}
-  .cols{grid-template-columns:1fr}
-  .col{border-right:none;border-bottom:1px solid var(--line)}
-  .col-body{max-height:64vh}
-  .tl-wrap{max-height:70vh}
-  .docs{min-height:60vh}
+@media (max-width:960px){
+  body{overflow:auto}.app{height:auto;min-height:100vh}
+  .panes{grid-template-columns:1fr}
+  .pane.left{border-right:none;border-bottom:1px solid var(--line)}
+  .pane .scroll{max-height:60vh}
+  .tip{display:none}
 }
 </style>
 <div class="app" id="app" hidden>
   <header class="bar">
-    <div class="mark"><b>Procedural Intelligence</b></div>
-    <select id="caseSel" class="sel" aria-label="Case"></select>
-    <select id="profSel" class="sel" aria-label="Site profile"></select>
+    <h1>Procedural Intelligence</h1>
+    <select id="caseSel" aria-label="Case"></select>
+    <select id="profSel" aria-label="Site profile"></select>
     <div class="spacer"></div>
-    <span class="lbl" id="srcInfo"></span>
-    <button class="pill" id="replayBtn" title="Replay the reconstruction" aria-label="Replay reconstruction">&#8635;&nbsp;replay</button>
-    <button class="iconbtn" id="themeBtn" title="Toggle theme" aria-label="Toggle theme">&#9681;</button>
+    <button class="themebtn" id="themeBtn" aria-label="Toggle light/dark">&#9681;</button>
   </header>
 
-  <div class="cols">
-    <!-- transcript -->
-    <section class="col" aria-label="Transcript">
-      <div class="col-head"><span class="lbl">Transcript</span><span class="lbl mono" id="turnCount"></span></div>
-      <div id="legend" class="legend"></div>
-      <input id="search" class="search" placeholder="filter transcript&hellip;" />
-      <div class="col-body"><div id="turns" class="turns"></div></div>
+  <div class="panes">
+    <section class="pane left">
+      <div class="pane-head"><h2>What was said</h2><span class="sub" id="turnCount"></span></div>
+      <div class="scroll" id="turnScroll"><div id="turns"></div></div>
     </section>
 
-    <!-- timeline -->
-    <section class="col" aria-label="Procedural timeline">
-      <div class="col-head"><span class="lbl">Procedural timeline</span><span class="lbl mono" id="evCount"></span></div>
-      <div class="transport">
-        <button class="play" id="playBtn" aria-label="Play">&#9654;</button>
-        <div class="scrub" id="scrub"><div class="fill" id="scrubFill"></div><div class="knob" id="scrubKnob"></div></div>
-        <span class="tclock tnum" id="transClock">00:00</span>
-        <span class="lbl" id="audioTag" hidden>&#9834; audio</span>
-      </div>
-      <audio id="audio" preload="none"></audio>
-      <div class="tl-wrap" id="tlWrap"><div class="tl" id="tl"></div></div>
-    </section>
-
-    <!-- state + docs -->
-    <section class="col" aria-label="Case state and documents">
-      <div class="ctx" id="ctx" hidden></div>
-      <div class="board">
-        <span class="lbl">Case state <span id="asOf" class="mono" style="color:var(--ink-faint)"></span></span>
-        <div class="grid" id="board"></div>
-      </div>
-      <div class="docs">
-        <div class="tabs" id="tabs" role="tablist"></div>
-        <div class="doc-note" id="docNote" hidden>documents reflect the <b>final</b> case state &mdash; the timeline is scrubbed back to <span id="docNoteT"></span></div>
-        <div class="doc" id="doc" role="tabpanel"></div>
-      </div>
+    <section class="pane right">
+      <div class="patient" id="patient" hidden></div>
+      <div class="tabs" id="tabs" role="tablist"></div>
+      <div class="scroll" id="tabScroll"><div id="tabBody"></div></div>
     </section>
   </div>
-  <div class="hint" id="hint">Hover any event, state chip, or <span style="border-bottom:1px solid var(--accent-line)">linked phrase</span> to trace it across all three columns &nbsp;&middot;&nbsp; <kbd>space</kbd> play &nbsp; <kbd>r</kbd> replay &nbsp;&middot;&nbsp; drag the playhead to rebuild the case state at any moment</div>
+
+  <audio id="audio" preload="none"></audio>
+  <div class="transport">
+    <button class="play" id="playBtn" aria-label="Play / pause">&#9654;</button>
+    <div class="scrub" id="scrub"><div class="fill" id="scrubFill"></div><div class="knob" id="scrubKnob"></div></div>
+    <span class="clk tnum" id="clk">00:00</span>
+    <span class="audiotag" id="audioTag" hidden>&#9834; first 90s</span>
+    <span class="tip" id="tip">hover a line to see where it came from</span>
+  </div>
 </div>
 <div class="loading" id="loading">reconstructing&hellip;</div>
 
@@ -271,546 +169,344 @@ select{padding-right:26px;background-image:linear-gradient(45deg,transparent 50%
 <script>
 "use strict";
 const $ = s => document.querySelector(s);
-const el = (t, c, txt) => { const e = document.createElement(t); if (c) e.className = c; if (txt != null) e.textContent = txt; return e; };
-const clock = s => { s = Math.max(0, Math.round(s)); const m = Math.floor(s/60), ss = s%60; const h = Math.floor(m/60);
+const el = (t,c,txt)=>{const e=document.createElement(t);if(c)e.className=c;if(txt!=null)e.textContent=txt;return e;};
+const clock = s => { s=Math.max(0,Math.round(s)); const m=Math.floor(s/60), ss=s%60, h=Math.floor(m/60);
   return h ? `${h}:${String(m%60).padStart(2,'0')}:${String(ss).padStart(2,'0')}` : `${String(m).padStart(2,'0')}:${String(ss).padStart(2,'0')}`; };
-const ROLE_LABEL = { surgeon:'surgeon', anesthesia:'anesthesia', circulating_nurse:'circ. nurse', scrub_nurse:'scrub nurse', assistant:'assistant', perfusionist:'perfusion', other:'other' };
-const EV_LABEL = { phase_transition:'phase', medication_given:'medication', incision:'incision', conversion:'conversion', implant_placed:'implant', line_placed:'line', drain_placed:'drain', device_step:'device', blood_loss:'blood loss', hemodynamic_event:'hemodynamic', transfusion:'transfusion', count_status:'count', specimen:'specimen', complication:'complication', equipment_issue:'equipment', personnel_change:'personnel', disposition:'disposition' };
+const ROLE = { surgeon:'Surgeon', anesthesia:'Anesthesia', circulating_nurse:'Nurse', scrub_nurse:'Scrub nurse', assistant:'Assistant', perfusionist:'Perfusion', other:'' };
+const KIND = { phase_transition:'phase', medication_given:'medication', incision:'incision', conversion:'conversion', implant_placed:'implant', line_placed:'line', drain_placed:'drain', device_step:'step', blood_loss:'blood loss', hemodynamic_event:'hemodynamics', transfusion:'transfusion', count_status:'count', specimen:'specimen', complication:'complication', equipment_issue:'equipment', personnel_change:'personnel', disposition:'disposition' };
+const TITLE = { case01_lapchole:'Lap chole to open', case01_uk:'Lap chole to open (NHS)', case03_trauma_exlap:'Trauma laparotomy', case04_cath_pci:'Coronary PCI', case02_tka_uneventful:'Routine knee replacement', mmor_007_TKA:'MM-OR knee (transcript)', mmor_007_audio:'MM-OR knee (audio)' };
 
-const PI = { cases:{}, id:null, D:null, playT:1e9, dur:1, hotEv:new Set(), hotTurn:new Set(), tab:'handoff', roleOff:new Set(), q:'', playing:false, raf:0, audio:null };
+const PI = { cases:{}, id:null, D:null, dur:1, playT:1e9, tab:'timeline', hotEv:new Set(), hotTurn:new Set(), playing:false, raf:0, audio:null, live:false };
 
-/* ---------- data loading ---------- */
+/* ---------- boot ---------- */
 async function boot(){
-  let bundle = {};
-  try { bundle = JSON.parse($('#bundle').textContent) || {}; } catch(e){}
-  let live = [];
-  try {
-    const r = await fetch('/api/cases');
-    if (r.ok) live = await r.json();
-  } catch(e){}
-  PI.live = live.length > 0;
-  const sel = $('#caseSel');
+  let bundle={}; try{ bundle=JSON.parse($('#bundle').textContent)||{}; }catch(e){}
+  let live=[]; try{ const r=await fetch('/api/cases'); if(r.ok) live=await r.json(); }catch(e){}
+  PI.live = live.length>0;
+  const sel=$('#caseSel');
   let ids;
-  if (PI.live){
-    for (const c of live) PI.cases[c.case_id] = null;
-    ids = live.map(c => c.case_id);
-    live.forEach(c => sel.append(new Option(caseLabel(c), c.case_id)));
-  } else {
-    PI.cases = bundle;
-    ids = Object.keys(bundle);
-    ids.forEach(id => {
-      const d = bundle[id];
-      sel.append(new Option(caseLabel({ case_id: id, profile: d.profile.id, source: d.source, n_events: d.events.length }), id));
-    });
-  }
-  if (!ids.length){ $('#loading').textContent = 'no cases'; return; }
-  buildProfileSelect();
-  sel.onchange = () => loadCase(sel.value);
-  await loadCase(ids[0]);
+  if (PI.live){ live.forEach(c=>{ PI.cases[c.case_id]=null; sel.append(new Option(label(c.case_id,c.source),c.case_id)); }); ids=live.map(c=>c.case_id); }
+  else { PI.cases=bundle; ids=Object.keys(bundle); ids.forEach(id=>sel.append(new Option(label(id,bundle[id].source),id))); }
+  if (!ids.length){ $('#loading').textContent='no cases'; return; }
+  ['default_or','uk_or','cath_lab','mmor_robotic'].forEach(p=>$('#profSel').append(new Option(p.replace(/_/g,' '),p)));
+  sel.onchange=()=>load(sel.value);
+  $('#profSel').onchange=()=>{ const p=$('#profSel').value; if(p===PI.D.profile.id)return; PI.live?reprofile(p):(($('#profSel').value=PI.D.profile.id), tip('profile switching needs the local server')); };
   wire();
-  $('#loading').hidden = true;
-  $('#app').hidden = false;
-  requestAnimationFrame(() => $('#app').classList.add('in'));
-  setTimeout(replay, 350);
+  await load(ids[0]);
+  $('#loading').hidden=true; $('#app').hidden=false;
+  requestAnimationFrame(()=>$('#app').classList.add('in'));
 }
+function label(id,src){ const nm=TITLE[id]||id; return nm + (/audio|\.mp3|\.m4a|\.wav/i.test(src||'')?'  —  audio':''); }
 
-const CASE_TITLES = {
-  case01_lapchole: 'Lap chole → open',
-  case01_uk: 'Lap chole → open (NHS)',
-  case03_trauma_exlap: 'Trauma laparotomy',
-  case04_cath_pci: 'Coronary PCI',
-  case02_tka_uneventful: 'Routine knee replacement',
-  mmor_007_TKA: 'MM-OR knee (transcript)',
-  mmor_007_audio: 'MM-OR knee (raw audio)',
-};
-function caseLabel(c){
-  const nm = CASE_TITLES[c.case_id] || c.case_id;
-  const src = /audio|\.mp3|\.m4a|\.wav/i.test(c.source || '') ? 'audio' : 'transcript';
-  return nm + '  ·  ' + src;
-}
-
-async function loadCase(id){
-  let D = PI.cases[id];
-  if (!D){
-    try {
-      const r = await fetch('/api/cases/' + id);
-      D = r.ok ? await r.json() : null;
-    } catch(e){ D = null; }
-    if (D && D.events) PI.cases[id] = D;
-  }
-  if (!D || !D.events){ flash('could not load ' + id); return; }
-  PI.id = id; PI.D = D;
-  PI.dur = Math.max(1, ...D.events.map(e => e.t_start_s), ...D.turns.map(t => t.end_s)) + 20;
-  PI.playT = 1e9;
-  PI.tab = (D.drafts && D.drafts.handoff) ? 'handoff' : Object.keys(D.drafts || {})[0];
-  PI.roleOff.clear();
-  $('#caseSel').value = id;
-  $('#profSel').value = D.profile.id;
-  $('#srcInfo').textContent = D.source ? ('src: ' + D.source) : '';
+async function load(id){
+  let D=PI.cases[id];
+  if (!D){ try{ const r=await fetch('/api/cases/'+id); D=r.ok?await r.json():null; }catch(e){ D=null; } if(D&&D.events) PI.cases[id]=D; }
+  if (!D||!D.events){ tip('could not load '+id); return; }
+  PI.id=id; PI.D=D;
+  PI.dur=Math.max(1,...D.events.map(e=>e.t_start_s),...D.turns.map(t=>t.end_s))+15;
+  PI.playT=1e9; PI.tab='timeline'; PI.hotEv.clear(); PI.hotTurn.clear();
+  $('#caseSel').value=id; $('#profSel').value=D.profile.id;
   setupAudio(D);
-  renderAll();
+  renderPatient(); renderTurns(); renderTabs(); renderTab(); syncScrub();
 }
 
-function setupAudio(D){
-  const a = $('#audio'), tag = $('#audioTag');
-  a.pause();
-  if (PI.live && D.has_audio){
-    a.src = '/api/cases/' + PI.id + '/audio';
-    tag.hidden = false;
-    a.onloadedmetadata = () => { if (isFinite(a.duration) && a.duration > 1) { PI.dur = a.duration; syncPlay(); } };
-    a.ontimeupdate = () => { if (!a.paused){ PI.playT = a.currentTime; paintPlaying(); } };
-    a.onended = () => { PI.playing = false; $('#playBtn').innerHTML = '&#9654;'; };
-    PI.audio = a;
-  } else {
-    a.removeAttribute('src'); a.load();
-    tag.hidden = true;
-    PI.audio = null;
-  }
+/* ---------- patient line ---------- */
+function renderPatient(){
+  const c=PI.D.context||{}, host=$('#patient');
+  const bits=[];
+  if (c.patient_descriptor) bits.push('<b>'+esc(c.patient_descriptor)+'</b>');
+  if (c.planned_procedure) bits.push(esc(c.planned_procedure));
+  if (c.indication) bits.push(esc(c.indication));
+  const src=c.sources||{};
+  const fromEhr = Object.values(src).includes('ehr');
+  let html = bits.join(' &middot; ');
+  if (fromEhr) html += ' <span class="tag">from records</span>';
+  if ((c.allergies||[]).length) html += '<br><span class="warn">Allergy:</span> ' + esc(c.allergies.join(', '));
+  if (!html){ host.hidden=true; return; }
+  host.hidden=false; host.innerHTML=html;
 }
+function esc(s){ return String(s).replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
 
-function buildProfileSelect(){
-  const ps = $('#profSel');
-  ['default_or','uk_or','cath_lab','mmor_robotic'].forEach(p => ps.append(new Option(p.replace(/_/g,' '), p)));
-  ps.onchange = () => {
-    const p = ps.value;
-    if (p === PI.D.profile.id) return;
-    if (!PI.live){
-      ps.value = PI.D.profile.id;
-      flash('live profile switching needs the local server — try `pi run <file> --profile ' + p + '`');
-      return;
-    }
-    reprofile(p);
-  };
-}
-async function reprofile(p){
-  const base = PI.id.split('__')[0];
-  const newId = base + '__' + p;
-  flash('re-running ' + base + ' with the ' + p.replace(/_/g,' ') + ' profile…');
-  try {
-    const fd = new FormData(); fd.append('profile', p);
-    const r = await fetch('/api/cases/' + base + '/reprofile', { method:'POST', body:fd });
-    if (!r.ok){ throw new Error((await r.json()).detail || r.statusText); }
-    await pollCase(newId, p);
-  } catch(e){ flash('could not switch profile: ' + e.message); $('#profSel').value = PI.D.profile.id; }
-}
-async function pollCase(id, profLabel){
-  const started = Date.now();
-  const tick = async () => {
-    const s = await (await fetch('/api/cases/' + id + '/status')).json();
-    if (s.error){ flash('run failed: ' + s.error); return; }
-    if (s.done){
-      PI.cases[id] = null;
-      if (![...$('#caseSel').options].some(o => o.value === id))
-        $('#caseSel').append(new Option(CASE_TITLES[id.split('__')[0]] || id, id));
-      await loadCase(id);
-      flash('now showing the ' + profLabel.replace(/_/g,' ') + ' version — same transcript, different hospital');
-      return;
-    }
-    const done = (s.logged_agents || []).length;
-    $('#hint').textContent = 'reconstructing with ' + profLabel.replace(/_/g,' ') + ' profile … ' + done + '/10 stages';
-    if (Date.now() - started < 600000) setTimeout(tick, 2500);
-  };
-  tick();
-}
-function flash(msg){ const h = $('#hint'); h.textContent = msg; setTimeout(() => h.textContent = h.dataset.def, 3200); }
-
-/* ---------- render ---------- */
-function renderAll(){ renderContext(); renderLegend(); renderTurns(); renderTimeline(); renderBoard(); renderTabs(); renderDoc(); syncPlay(); }
-
-function renderContext(){
-  const host = $('#ctx'); host.innerHTML = '';
-  const c = PI.D.context || {};
-  const src = c.sources || {};
-  const rows = [
-    ['procedure', c.planned_procedure, src.planned_procedure],
-    ['indication', c.indication, src.indication],
-    ['allergies', (c.allergies || []).join(', '), src.allergies, true],
-    ['home meds', (c.home_medications || []).join(', '), src.home_medications],
-    ['problems', (c.problem_list || []).join(', '), src.problem_list],
-  ].filter(r => r[1]);
-  if (!rows.length){ host.hidden = true; return; }
-  host.hidden = false;
-  rows.forEach(([k, v, s, allergy]) => {
-    const row = el('div', 'row' + (allergy ? ' allergy' : ''));
-    row.append(el('span', 'k', k), el('span', 'v', v));
-    if (s) { const b = el('span', 'src' + (s === 'ehr' ? ' ehr' : ''), s === 'ehr' ? 'EHR' : 'heard'); row.append(b); }
-    host.append(row);
-  });
-}
-
-function stateAt(t){
-  const ss = PI.D.states;
-  if (!ss.length) return {};
-  let cur = ss[0];
-  for (const s of ss) if (s.as_of_s <= t) cur = s; else break;
-  return cur;
-}
-function evActive(e){ return e.t_start_s <= PI.playT; }
-
-function speakerKey(t){ return t.role || t.speaker || null; }
-function speakerColor(t){
-  if (t.role) return `var(--r-${t.role})`;
-  if (!t.speaker) return 'var(--r-other)';
-  const pal = ['#0B6E63','#8A5A1E','#3C6FA0','#6B4E9E','#4A8C7C','#B23B32','#7a7a7a'];
-  let h = 0; for (const c of t.speaker) h = (h*31 + c.charCodeAt(0)) >>> 0;
-  return pal[h % pal.length];
-}
-function renderLegend(){
-  const box = $('#legend'); box.innerHTML = '';
-  const keys = [...new Set(PI.D.turns.map(speakerKey).filter(Boolean))];
-  if (!keys.length){ box.append(el('span','lbl','no speaker labels in this source')); return; }
-  const anyRole = PI.D.turns.some(t => t.role);
-  keys.forEach(k => {
-    const c = el('button', 'rchip' + (PI.roleOff.has(k) ? ' off' : ''));
-    c.setAttribute('aria-pressed', String(!PI.roleOff.has(k)));
-    const sample = PI.D.turns.find(t => speakerKey(t) === k);
-    const d = el('span','dot'); d.style.background = speakerColor(sample);
-    c.append(d, document.createTextNode(ROLE_LABEL[k] || k.replace(/_/g,' ').toLowerCase()));
-    c.onclick = () => { PI.roleOff.has(k) ? PI.roleOff.delete(k) : PI.roleOff.add(k); renderLegend(); renderTurns(); };
-    box.append(c);
-  });
-  if (!anyRole){ const n = el('span','lbl'); n.style.marginLeft='4px'; n.textContent='raw speaker ids'; box.append(n); }
-}
-
+/* ---------- transcript ---------- */
 function renderTurns(){
-  const box = $('#turns'); box.innerHTML = '';
-  $('#turnCount').textContent = PI.D.turns.length + ' turns';
-  PI.D.turns.forEach(t => {
-    const k = speakerKey(t);
-    const hidden = (k && PI.roleOff.has(k)) || (PI.q && !t.text.toLowerCase().includes(PI.q));
-    if (hidden) return;
-    const row = el('div', 'turn');
-    row.dataset.id = t.id;
-    if (PI.hotTurn.has(t.id)) row.classList.add('hot');
-    if (PI.hotTurn.size && !PI.hotTurn.has(t.id)) row.classList.add('dim');
-    const spine = el('div','spine');
-    spine.style.background = speakerColor(t);
-    const body = el('div','body');
-    if (k) body.append(el('span','who', ROLE_LABEL[t.role] || (t.role||t.speaker).replace(/_/g,' ')));
-    body.append(el('span','tx', t.text));
-    row.append(el('div','t tnum', clock(t.start_s)), spine, body);
+  const box=$('#turns'); box.innerHTML='';
+  $('#turnCount').textContent=PI.D.turns.length+' lines';
+  PI.D.turns.forEach(t=>{
+    const row=el('div','turn'); row.dataset.id=t.id;
+    row.append(el('div','t tnum',clock(t.start_s)));
+    const body=el('div');
+    const who = ROLE[t.role] || (t.speaker||'').replace(/_/g,' ');
+    if (who) body.append(el('span','who',who+' '));
+    body.append(el('span','tx',t.text));
+    row.append(body);
+    row.onmouseenter=()=>traceFromTurn(t.id);
+    row.onmouseleave=clearTrace;
     box.append(row);
   });
+  paintTrace();
 }
 
-const PHASE_STOPS = ['--ph-cool','--ph-cool','--ph-mid','--ph-warm','--ph-warm','--ph-close','--ph-close'];
-function phaseColor(phase){
-  const ph = PI.D.profile.phases || [];
-  const i = ph.indexOf(phase);
-  const k = i < 0 ? 0.4 : i / Math.max(1, ph.length - 1);
-  return `var(${PHASE_STOPS[Math.min(PHASE_STOPS.length-1, Math.round(k*(PHASE_STOPS.length-1)))]})`;
-}
-function renderTimeline(){
-  const tl = $('#tl'); tl.innerHTML = '';
-  $('#evCount').textContent = PI.D.events.length + ' events';
-  if (!PI.D.events.length){
-    tl.append(el('div','tl-empty','0 events extracted from this recording.\nToo short, too noisy, or not clinical speech.\nThe pipeline says so rather than inventing a timeline.'));
-    return;
-  }
-  const evs = PI.D.events.slice().sort((a,b) => a.t_start_s - b.t_start_s);
-  const firstFuture = evs.findIndex(e => e.t_start_s > PI.playT);
-  let curPhase = null, prevT = null;
-  evs.forEach((e, idx) => {
-    if (idx === firstFuture){
-      const now = el('div','tl-now');
-      now.append(el('span','dot'), el('span',null,'playhead · ' + clock(PI.playT)), el('span','ln'));
-      tl.append(now);
-    }
-    const ph = phaseAt(e.t_start_s);
-    if (ph && ph !== curPhase){
-      curPhase = ph;
-      const h = el('div','tl-phase');
-      const sw = el('div','sw'); sw.style.background = phaseColor(ph);
-      h.append(sw, el('div','nm', String(ph).replace(/_/g,' ')), el('div','ln'));
-      tl.append(h);
-      prevT = null;
-    }
-    if (prevT != null && e.t_start_s - prevT > 120){
-      tl.append(el('div','tl-gap', '— ' + Math.round((e.t_start_s - prevT)/60) + ' min —'));
-    }
-    prevT = e.t_start_s;
-    const row = el('div','ev'); row.dataset.id = e.id;
-    if (idx === 0) row.classList.add('first');
-    if (e.t_start_s > PI.playT) row.classList.add('future');
-    if (PI.hotEv.has(e.id)) row.classList.add('hot');
-    const rail = el('div','rail'); rail.append(el('div','node' + (e.confidence < 0.55 ? ' lowconf':'')));
-    const meta = el('div','meta');
-    meta.append(el('div','ty', EV_LABEL[e.type] || e.type));
-    meta.append(el('div','pl', payloadText(e)));
-    if (e.by_role) meta.append(el('div','role', 'said by ' + (ROLE_LABEL[e.by_role] || e.by_role)));
-    row.append(el('div','clk tnum', clock(e.t_start_s)), rail, meta);
-    row.onmouseenter = () => traceEvent(e.id);
-    row.onmouseleave = clearTrace;
-    row.onclick = () => { PI.playT = e.t_start_s + 0.1; syncPlay(); renderTimeline(); };
-    tl.append(row);
-  });
-}
-function phaseAt(t){
-  let ph = null;
-  for (const s of PI.D.states){ if (s.as_of_s <= t) ph = s.phase; else break; }
-  return ph;
-}
-function payloadText(e){
-  const p = e.payload || {};
-  if (e.type === 'phase_transition') return String(p.phase || '').replace(/_/g,' ');
-  if (e.type === 'medication_given') return [p.name, p.dose, p.route].filter(Boolean).join(' ');
-  if (e.type === 'blood_loss') return 'EBL ' + p.ebl_ml + ' mL';
-  if (e.type === 'transfusion') return [p.units, p.product].filter(Boolean).join(' ');
-  if (e.type === 'conversion') return (p.from||'') + ' → ' + (p.to||'');
-  if (e.type === 'count_status') return 'counts ' + (p.status || '') + (p.intentional ? ' (intentional)' : '');
-  if (e.type === 'disposition') return [p.destination, p.detail].filter(Boolean).join(' · ');
-  return Object.values(p).filter(v => typeof v !== 'object').join(' · ') || e.type;
-}
-
-function positionPlayhead(){ /* playhead is now a flow marker rendered by renderTimeline */ }
-
-function renderBoard(){
-  const S = stateAt(PI.playT), b = $('#board'); b.innerHTML = '';
-  $('#asOf').textContent = PI.playT < PI.dur ? '@ ' + clock(PI.playT) : '@ final';
-  const sev = severity(S);
-  const rows = [
-    ['phase', (S.phase||'').replace(/_/g,' '), 'phase'],
-    ['severity', sevHTML(sev), null, true],
-    ['EBL', S.ebl_ml != null ? S.ebl_ml + ' mL' : null, 'ebl_ml'],
-    ['transfusions', txfText(S), 'transfusion_totals'],
-    ['implants', (S.implants||[]).join(', ') || null, 'implants'],
-    ['drains', (S.drains||[]).join(', ') || null, 'drains'],
-    ['lines', (S.lines||[]).join(', ') || null, 'lines'],
-    ['counts', S.counts || null, 'counts'],
-    ['converted', S.converted || null, 'converted'],
-    ['disposition', S.disposition || null, 'disposition'],
-  ];
-  rows.forEach(([k, v, field, isHTML]) => {
-    const c = el('div','stat' + (v == null ? ' ghost' : ''));
-    if (field && PI.hotField === field) c.classList.add('hot');
-    c.append(el('div','k', k));
-    const val = el('div','v'); if (isHTML) val.innerHTML = v; else val.textContent = v == null ? 'not documented' : v;
-    c.append(val);
-    if (field){ c.onmouseenter = () => traceField(field); c.onmouseleave = clearTrace; }
-    b.append(c);
-  });
-}
-function txfText(S){ const t = S.transfusion_totals || {}; const ks = Object.keys(t); return ks.length ? ks.map(k => `${t[k]} ${k}`).join(', ') : null; }
-function severity(S){
-  const comps = (S.complications||[]).length, conc = (S.open_concerns||[]).length;
-  if (S.disposition && /icu/i.test(S.disposition) && (comps||conc)) return 'unstable';
-  if (comps || conc || S.converted) return 'watcher';
-  return 'stable';
-}
-function sevHTML(s){ return `<span class="sev ${s}"><span class="d"></span>${s}</span>`; }
-
+/* ---------- tabs ---------- */
+const TABS=[['timeline','Timeline'],['handoff','Handoff'],['opnote','Op note'],['family','Family']];
 function renderTabs(){
-  const box = $('#tabs'); box.innerHTML = '';
-  Object.keys(PI.D.drafts).forEach(k => {
-    const dr = PI.D.drafts[k];
-    const t = el('button','tab'); t.setAttribute('role','tab');
-    t.setAttribute('aria-selected', String(k === PI.tab));
-    t.append(el('span',null, k));
-    if (k === 'handoff') t.append(el('span','fmt', PI.D.profile.handoff_name));
-    const flags = (dr.unsupported_claims || []).filter(x => !/not generated|not fact-checked/.test(x));
-    if (dr.accepted && dr.text && !dr.text.startsWith('[')) t.append(el('span','badge ok','fact-checked'));
-    else if (flags.length) t.append(el('span','badge flag', flags.length + ' flag' + (flags.length>1?'s':'')));
-    t.onclick = () => { PI.tab = k; renderTabs(); renderDoc(); };
+  const box=$('#tabs'); box.innerHTML='';
+  TABS.forEach(([k,nm])=>{
+    if (k!=='timeline' && !PI.D.drafts[k]) return;
+    const t=el('button','tab'); t.setAttribute('role','tab'); t.setAttribute('aria-selected',String(k===PI.tab));
+    t.append(el('span',null,nm));
+    if (k==='handoff') t.append(el('span','fmt',PI.D.profile.handoff_name));
+    const dr=PI.D.drafts[k];
+    if (dr && dr.text && !dr.text.startsWith('[')){
+      const flags=(dr.unsupported_claims||[]).filter(x=>!/not generated|not fact-checked/.test(x));
+      t.append(el('span','dot '+(flags.length?'flag':'ok')));
+    }
+    t.onclick=()=>{ PI.tab=k; renderTabs(); renderTab(); };
     box.append(t);
   });
 }
 
-function renderDoc(){
-  const host = $('#doc'); host.innerHTML = '';
-  const dr = PI.D.drafts[PI.tab];
-  if (!dr || !dr.text){ host.className = 'doc empty'; host.textContent = 'no draft'; return; }
-  if (dr.text.startsWith('[')){ host.className = 'doc empty'; host.textContent = dr.text.replace(/^\[|\]$/g,''); return; }
-  host.className = 'doc';
-  const flags = (dr.unsupported_claims || []).filter(x => !/not generated|not fact-checked/.test(x));
-  if (flags.length){
-    const f = el('div','flags'); f.append(el('div',null,'Critic flagged as unverified:'));
-    const ul = el('ul'); flags.forEach(x => ul.append(el('li', null, x))); f.append(ul); host.append(f);
-  }
-  const links = PI.D.links[PI.tab] || [];
-  const text = dr.text;
-  const frag = document.createDocumentFragment();
-  // walk the text line by line, keeping global offsets so links map correctly
-  let off = 0;
-  for (const rawline of text.split('\n')){
-    const lstart = off; off += rawline.length + 1;
-    const line = rawline.trim();
-    if (!line) continue;
-    // "**Label**: body"  or  "**Label**"
-    const m = line.match(/^\*{0,2}([A-Z][A-Za-z0-9 ,/&()—.-]{1,46}?)\*{0,2}:\s*(.*)$/);
-    const isHead = line.length < 52 && (/^\*\*/.test(line) || /^[A-Z][A-Za-z /&()—-]+:?\s*$/.test(line));
-    if (m && (m[2] === '' || isHead || m[1].length < 34)){
-      if (m[2] === ''){ frag.append(el('h4', null, m[1].replace(/\*/g,''))); continue; }
-      const p = el('p','sec');
-      p.append(el('span','sec-k', m[1].replace(/\*/g,'') + '  '));
-      appendInline(p, m[2], lstart + (rawline.length - m[2].length), links, text);
-      frag.append(p);
-      continue;
-    }
-    const p = el('p');
-    appendInline(p, rawline, lstart, links, text);
-    frag.append(p);
-  }
-  host.append(frag);
-}
-function appendInline(p, str, gOffset, links, fullText){
-  // clean markdown bold/asterisks, then splice in link spans by global offset
-  const clean = str.replace(/\*\*/g, '');
-  const shift = (i) => i - (str.slice(0, i).match(/\*\*/g) || []).length * 2;
-  const local = links
-    .map(lk => ({ ...lk, s: lk.start - gOffset, e: lk.end - gOffset }))
-    .filter(lk => lk.s >= 0 && lk.e <= str.length && lk.e > lk.s)
-    .sort((a,b) => a.s - b.s);
-  let i = 0;
-  for (const lk of local){
-    const s = shift(lk.s), e = shift(lk.e);
-    if (s > i) p.append(document.createTextNode(clean.slice(i, s)));
-    const span = el('span','lk', clean.slice(s, e));
-    span.title = lk.label;
-    span.onmouseenter = () => { PI.hotEv = new Set(lk.event_ids); PI.hotTurn = new Set(lk.turn_ids); PI.hotField = lk.field; paintTrace(); };
-    span.onmouseleave = clearTrace;
-    p.append(span);
-    i = e;
-  }
-  if (i < clean.length) p.append(document.createTextNode(clean.slice(i)));
+function renderTab(){
+  const host=$('#tabBody');
+  if (PI.tab==='timeline') return renderTimeline(host);
+  renderDoc(host, PI.tab);
 }
 
-/* ---------- cross-highlight ---------- */
-function traceEvent(id){
-  const e = PI.D.events.find(x => x.id === id);
-  PI.hotEv = new Set([id]);
-  PI.hotTurn = new Set(e ? e.evidence_turn_ids : []);
-  PI.hotField = null;
-  // also light doc sentences that link to this event
-  for (const k in PI.D.links) for (const lk of PI.D.links[k]) if (lk.event_ids.includes(id)) PI.hotField = lk.field;
-  paintTrace();
-}
-function traceField(field){
-  PI.hotField = field;
-  const S = stateAt(1e9);
-  const prov = (S.provenance || {})[field] || [];
-  PI.hotEv = new Set(prov);
-  PI.hotTurn = new Set(prov.flatMap(eid => (PI.D.events.find(e => e.id === eid) || {}).evidence_turn_ids || []));
-  paintTrace();
-}
-function clearTrace(){ PI.hotEv.clear(); PI.hotTurn.clear(); PI.hotField = null; paintTrace(); }
-function paintTrace(){
-  document.querySelectorAll('.turn').forEach(r => {
-    r.classList.toggle('hot', PI.hotTurn.has(r.dataset.id));
-    r.classList.toggle('dim', PI.hotTurn.size > 0 && !PI.hotTurn.has(r.dataset.id));
+/* ---------- timeline ---------- */
+function stateAt(t){ let cur=(PI.D.states||[])[0]||{}; for(const s of PI.D.states||[]){ if(s.as_of_s<=t) cur=s; else break; } return cur; }
+function renderTimeline(host){
+  host.innerHTML='';
+  const wrap=el('div','tlwrap');
+  if (!PI.D.events.length){
+    wrap.append(el('div','tl-empty','No clinical events were extracted from this recording.\nToo short, noisy, or not clinical speech — shown as-is rather than invented.'));
+    host.append(wrap); return;
+  }
+  wrap.append(snapshot());
+  const evs=PI.D.events.slice().sort((a,b)=>a.t_start_s-b.t_start_s);
+  evs.forEach(e=>{
+    const row=el('div','ev'); row.dataset.id=e.id;
+    if (e.t_start_s>PI.playT) row.classList.add('future');
+    if (PI.hotEv.has(e.id)) row.classList.add('hot');
+    row.append(el('div','clk tnum',clock(e.t_start_s)));
+    const txt=el('div','txt');
+    txt.append(el('span','kind',KIND[e.type]||e.type));
+    txt.append(document.createTextNode(evText(e)));
+    row.append(txt);
+    row.onmouseenter=()=>traceFromEvent(e.id);
+    row.onmouseleave=clearTrace;
+    wrap.append(row);
   });
-  document.querySelectorAll('.ev').forEach(r => r.classList.toggle('hot', PI.hotEv.has(r.dataset.id)));
-  document.querySelectorAll('.stat').forEach((c, i) => {});
-  renderBoard();
-  if (PI.hotTurn.size){
-    const first = [...document.querySelectorAll('.turn.hot')][0];
-    if (first) first.scrollIntoView({ block:'center', behavior:'smooth' });
+  host.append(wrap);
+}
+function snapshot(){
+  const S=stateAt(PI.playT), d=el('div','snap');
+  const sev=severity(S);
+  const parts=[`phase <b>${(S.phase||'').replace(/_/g,' ')}</b>`, `<span class="sev-${sev}">${sev}</span>`];
+  if (S.ebl_ml!=null) parts.push(`EBL <b>${S.ebl_ml} mL</b>`);
+  const tx=S.transfusion_totals||{}; if (Object.keys(tx).length) parts.push('transfused ' + Object.entries(tx).map(([k,v])=>`${v} ${k}`).join(', '));
+  if ((S.implants||[]).length) parts.push('implant: '+S.implants.join(', '));
+  if ((S.drains||[]).length) parts.push('drain: '+S.drains.join(', '));
+  if (S.converted) parts.push('converted '+S.converted);
+  if (S.counts) parts.push('counts '+S.counts);
+  if (S.disposition) parts.push('to <b>'+S.disposition+'</b>');
+  d.innerHTML = (PI.playT<PI.dur-.5 ? `state at ${clock(PI.playT)} &mdash; ` : 'final state &mdash; ') + parts.join(' &middot; ');
+  return d;
+}
+function severity(S){
+  const c=(S.complications||[]).length, o=(S.open_concerns||[]).length;
+  if (S.disposition && /icu/i.test(S.disposition) && (c||o)) return 'unstable';
+  if (c||o||S.converted) return 'watcher';
+  return 'stable';
+}
+function evText(e){
+  const p=e.payload||{};
+  if (e.type==='phase_transition') return (p.phase||'').replace(/_/g,' ');
+  if (e.type==='medication_given') return [p.name,p.dose,p.route].filter(Boolean).join(' ');
+  if (e.type==='blood_loss') return 'about '+p.ebl_ml+' mL';
+  if (e.type==='transfusion') return [p.units,p.product].filter(Boolean).join(' ');
+  if (e.type==='conversion') return (p.from||'')+' to '+(p.to||'');
+  if (e.type==='count_status') return (p.status||'')+(p.intentional?' (intentional)':'');
+  if (e.type==='disposition') return [p.destination,p.detail].filter(Boolean).join(' - ');
+  return Object.values(p).filter(v=>typeof v!=='object').join(' - ')||'';
+}
+
+/* ---------- document ---------- */
+function renderDoc(host, kind){
+  host.innerHTML='';
+  const dr=PI.D.drafts[kind];
+  const d=el('div','doc');
+  if (!dr||!dr.text){ d.className='doc empty'; d.textContent='no draft'; host.append(d); return; }
+  if (dr.text.startsWith('[')){ d.className='doc empty'; d.textContent=dr.text.replace(/^\[|\]$/g,''); host.append(d); return; }
+  const flags=(dr.unsupported_claims||[]).filter(x=>!/not generated|not fact-checked/.test(x));
+  if (flags.length){
+    const f=el('div','flags'); f.append(el('div',null,'Not verified against the transcript:'));
+    const ul=el('ul'); flags.forEach(x=>ul.append(el('li',null,x))); f.append(ul); d.append(f);
+  }
+  if (PI.playT<PI.dur-.5){
+    const n=el('p'); n.style.color='var(--watch)'; n.style.fontFamily='var(--sans)'; n.style.fontSize='12px';
+    n.textContent='This document reflects the whole case; the transcript is scrubbed back to '+clock(PI.playT)+'.';
+    d.append(n);
+  }
+  const links=PI.D.links[kind]||[]; const text=dr.text;
+  let off=0;
+  for (const raw of text.split('\n')){
+    const lstart=off; off+=raw.length+1;
+    const line=raw.trim(); if(!line) continue;
+    const m=line.match(/^\*{0,2}([A-Z][A-Za-z0-9 ,/&()'—–-]{1,44}?)\*{0,2}:\s*(.*)$/);
+    if (m && (m[2]==='' || m[1].length<46)){
+      const p=el('p');
+      p.append(el('span','lead',m[1].replace(/\*/g,'')));
+      if (m[2]) inline(p, m[2], lstart+(raw.length-m[2].length), links);
+      d.append(p); continue;
+    }
+    const p=el('p'); inline(p, raw, lstart, links); d.append(p);
+  }
+  host.append(d);
+}
+function inline(p, str, gOff, links){
+  const clean=str.replace(/\*\*/g,'');
+  const shift=i=>i-(str.slice(0,i).match(/\*\*/g)||[]).length*2;
+  const local=links.map(lk=>({...lk,s:lk.start-gOff,e:lk.end-gOff})).filter(lk=>lk.s>=0&&lk.e<=str.length&&lk.e>lk.s).sort((a,b)=>a.s-b.s);
+  let i=0;
+  for (const lk of local){
+    const s=shift(lk.s), e=shift(lk.e);
+    if (s>i) p.append(document.createTextNode(clean.slice(i,s)));
+    const span=el('span','lk',clean.slice(s,e)); span.title=lk.label;
+    span.dataset.ev=lk.event_ids.join(','); span.dataset.tn=lk.turn_ids.join(',');
+    span.onmouseenter=()=>{ PI.hotEv=new Set(lk.event_ids); PI.hotTurn=new Set(lk.turn_ids); paintTrace(true); };
+    span.onmouseleave=clearTrace;
+    p.append(span); i=e;
+  }
+  if (i<clean.length) p.append(document.createTextNode(clean.slice(i)));
+}
+
+/* ---------- trace ---------- */
+function traceFromTurn(tid){
+  PI.hotTurn=new Set([tid]);
+  PI.hotEv=new Set(PI.D.events.filter(e=>(e.evidence_turn_ids||[]).includes(tid)).map(e=>e.id));
+  paintTrace();
+}
+function traceFromEvent(eid){
+  const e=PI.D.events.find(x=>x.id===eid);
+  PI.hotEv=new Set([eid]); PI.hotTurn=new Set(e?e.evidence_turn_ids:[]);
+  paintTrace(true);
+}
+function clearTrace(){ PI.hotEv.clear(); PI.hotTurn.clear(); paintTrace(); }
+function paintTrace(scrollTurn){
+  document.querySelectorAll('.turn').forEach(r=>{
+    r.classList.toggle('hot',PI.hotTurn.has(r.dataset.id));
+    r.classList.toggle('dim',PI.hotTurn.size>0 && !PI.hotTurn.has(r.dataset.id));
+  });
+  document.querySelectorAll('.ev').forEach(r=>r.classList.toggle('hot',PI.hotEv.has(r.dataset.id)));
+  document.querySelectorAll('.doc .lk').forEach(s=>{
+    const evs=(s.dataset.ev||'').split(',').filter(Boolean);
+    s.classList.toggle('hot', evs.some(x=>PI.hotEv.has(x)));
+  });
+  if (scrollTurn && PI.hotTurn.size){
+    const first=[...document.querySelectorAll('.turn.hot')][0];
+    if (first) first.scrollIntoView({block:'center',behavior:'smooth'});
   }
 }
 
 /* ---------- transport ---------- */
-function syncPlay(){
-  const scrubbed = PI.playT < PI.dur - 0.5;
-  const pct = Math.min(100, PI.playT / PI.dur * 100);
-  $('#scrubFill').style.width = pct + '%';
-  $('#scrubKnob').style.left = pct + '%';
-  $('#transClock').innerHTML = scrubbed ? `<b>${clock(PI.playT)}</b> / ${clock(PI.dur)}` : clock(PI.dur);
-  document.querySelectorAll('.ev').forEach(r => {
-    const e = PI.D.events.find(x => x.id === r.dataset.id);
-    r.classList.toggle('future', e && e.t_start_s > PI.playT);
-  });
-  const note = $('#docNote');
-  note.hidden = !scrubbed || !PI.D.events.length;
-  if (scrubbed) $('#docNoteT').textContent = clock(PI.playT);
-  renderBoard();
+function syncScrub(){
+  const scrubbed = PI.playT < PI.dur-.5;
+  const pct=Math.min(100,PI.playT/PI.dur*100);
+  $('#scrubFill').style.width=pct+'%'; $('#scrubKnob').style.left=pct+'%';
+  $('#clk').innerHTML = scrubbed ? `<b>${clock(PI.playT)}</b> / ${clock(PI.dur)}` : clock(PI.dur);
 }
-function setPlayFromX(clientX){
-  const r = $('#scrub').getBoundingClientRect();
-  PI.playT = Math.max(0, Math.min(1, (clientX - r.left) / r.width)) * PI.dur;
-  if (PI.audio && isFinite(PI.audio.duration)) PI.audio.currentTime = Math.min(PI.playT, PI.audio.duration - 0.1);
-  paintPlaying();
+function seekTo(v){
+  PI.playT = Math.max(0, Math.min(1, v)) * PI.dur;
+  if (PI.audio && isFinite(PI.audio.duration)) PI.audio.currentTime = Math.min(PI.playT, PI.audio.duration-0.05);
+  followPlay(true);
 }
-let _lastTlPaint = 0;
-function paintPlaying(force){
-  syncPlay();
-  const now = performance.now();
-  if (force || now - _lastTlPaint > 160){
-    _lastTlPaint = now;
-    renderTimeline();
-    if (!PI.hotTurn.size){
-      // follow the case in both the transcript and the timeline
-      let best = null;
-      for (const t of PI.D.turns){ if (t.start_s <= PI.playT + 2) best = t; else break; }
-      const row = best && document.querySelector(`.turn[data-id="${best.id}"]`);
-      if (row) row.scrollIntoView({ block:'center' });
-      const nowMark = document.querySelector('.tl-now');
-      if (nowMark) nowMark.scrollIntoView({ block:'center' });
-      else if (PI.playT >= PI.dur - 1){
-        const last = document.querySelector('.ev:last-of-type');
-        if (last) last.scrollIntoView({ block:'center' });
-      }
-    }
+let _last=0;
+function followPlay(force){
+  syncScrub();
+  const now=performance.now();
+  if (!force && now-_last<140) return;
+  _last=now;
+  if (PI.tab==='timeline') renderTab();
+  const S=PI.D.turns; let best=null;
+  for (const t of S){ if (t.start_s<=PI.playT+1.5) best=t; else break; }
+  if (best && !PI.hotTurn.size){
+    const row=document.querySelector(`.turn[data-id="${best.id}"]`);
+    if (row) row.scrollIntoView({block:'center'});
   }
 }
 function play(){
-  PI.playing = !PI.playing;
+  PI.playing=!PI.playing;
   $('#playBtn').innerHTML = PI.playing ? '&#10073;&#10073;' : '&#9654;';
   if (PI.audio){
-    if (PI.playing){
-      if (PI.playT >= PI.dur - 0.5) { PI.playT = 0; PI.audio.currentTime = 0; }
-      PI.audio.play();
-    } else {
-      PI.audio.pause(); renderTimeline();
-    }
+    if (PI.playing){ if (PI.playT>=PI.dur-.5){ PI.playT=0; PI.audio.currentTime=0; } PI.audio.play(); }
+    else PI.audio.pause();
     return;
   }
-  if (!PI.playing) { cancelAnimationFrame(PI.raf); renderTimeline(); return; }
-  if (PI.playT >= PI.dur) PI.playT = 0;
-  let last = performance.now();
-  const step = now => {
+  if (!PI.playing){ cancelAnimationFrame(PI.raf); return; }
+  if (PI.playT>=PI.dur) PI.playT=0;
+  let t0=performance.now();
+  const step=now=>{
     if (!PI.playing) return;
-    PI.playT += (now - last) / 1000 * 55; last = now;
-    if (PI.playT >= PI.dur){ PI.playT = PI.dur; PI.playing = false; $('#playBtn').innerHTML = '&#9654;'; paintPlaying(true); return; }
-    paintPlaying(); PI.raf = requestAnimationFrame(step);
+    PI.playT += (now-t0)/1000*50; t0=now;
+    if (PI.playT>=PI.dur){ PI.playT=PI.dur; PI.playing=false; $('#playBtn').innerHTML='&#9654;'; followPlay(true); return; }
+    followPlay(); PI.raf=requestAnimationFrame(step);
   };
-  PI.raf = requestAnimationFrame(step);
+  PI.raf=requestAnimationFrame(step);
 }
-function replay(){
-  if (PI.audio){ PI.audio.pause(); PI.playing = false; $('#playBtn').innerHTML = '&#9654;'; }
-  if (!PI.D || !PI.D.events.length){ PI.playT = 1e9; renderAll(); return; }
-  if (matchMedia('(prefers-reduced-motion:reduce)').matches){ PI.playT = 1e9; renderAll(); return; }
-  PI.playT = 0; renderTimeline(); syncPlay();
-  const t0 = performance.now(), dur = 2800;
-  const step = now => {
-    const k = Math.min(1, (now - t0) / dur);
-    PI.playT = (k*k*(3-2*k)) * PI.dur;   // smoothstep
-    paintPlaying();
-    if (k < 1) requestAnimationFrame(step);
-    else { PI.playT = 1e9; paintPlaying(true); }
+
+function setupAudio(D){
+  const a=$('#audio'), tag=$('#audioTag');
+  a.pause(); PI.playing=false; $('#playBtn').innerHTML='&#9654;';
+  if (PI.live && D.has_audio){
+    a.src='/api/cases/'+PI.id+'/audio'; tag.hidden=false;
+    a.onended=()=>{ PI.playing=false; $('#playBtn').innerHTML='&#9654;'; };
+    a.ontimeupdate=()=>{ if(!a.paused){ PI.playT=a.currentTime; followPlay(); } };
+    PI.audio=a;
+  } else { a.removeAttribute('src'); a.load(); tag.hidden=true; PI.audio=null; }
+}
+
+/* ---------- profile re-run ---------- */
+async function reprofile(p){
+  const base=PI.id.split('__')[0], newId=base+'__'+p;
+  tip('re-running with the '+p.replace(/_/g,' ')+' profile — about 3 min');
+  try{
+    const fd=new FormData(); fd.append('profile',p);
+    const r=await fetch('/api/cases/'+base+'/reprofile',{method:'POST',body:fd});
+    if (!r.ok) throw new Error((await r.json()).detail||r.statusText);
+    poll(newId,p);
+  }catch(e){ tip('could not switch: '+e.message); $('#profSel').value=PI.D.profile.id; }
+}
+function poll(id,p){
+  const t0=Date.now();
+  const go=async()=>{
+    const s=await (await fetch('/api/cases/'+id+'/status')).json();
+    if (s.error){ tip('run failed: '+s.error); return; }
+    if (s.done){
+      PI.cases[id]=null;
+      if (![...$('#caseSel').options].some(o=>o.value===id)) $('#caseSel').append(new Option((TITLE[id.split('__')[0]]||id)+' ('+p.replace(/_/g,' ')+')',id));
+      await load(id); tip('same transcript, '+p.replace(/_/g,' ')+' profile');
+      return;
+    }
+    $('#tip').textContent = 'reconstructing … '+((s.logged_agents||[]).length)+'/10 steps';
+    if (Date.now()-t0<600000) setTimeout(go,2500);
   };
-  requestAnimationFrame(step);
+  go();
 }
+function tip(m){ const t=$('#tip'); t.textContent=m; setTimeout(()=>t.textContent=t.dataset.def,3500); }
 
 /* ---------- wire ---------- */
 function wire(){
-  $('#hint').dataset.def = $('#hint').textContent;
-  $('#playBtn').onclick = play;
-  $('#replayBtn').onclick = replay;
-  const sc = $('#scrub');
-  let drag = false;
-  sc.onpointerdown = e => { drag = true; sc.setPointerCapture(e.pointerId); setPlayFromX(e.clientX); };
-  sc.onpointermove = e => { if (drag) setPlayFromX(e.clientX); };
-  sc.onpointerup = e => { drag = false; };
-  $('#search').oninput = e => { PI.q = e.target.value.toLowerCase().trim(); renderTurns(); };
-  $('#themeBtn').onclick = () => {
-    const cur = document.documentElement.getAttribute('data-theme');
-    const next = cur === 'dark' ? 'light' : cur === 'light' ? 'dark' : (matchMedia('(prefers-color-scheme:dark)').matches ? 'light' : 'dark');
-    document.documentElement.setAttribute('data-theme', next);
+  $('#tip').dataset.def=$('#tip').textContent;
+  $('#playBtn').onclick=play;
+  const sc=$('#scrub'); let drag=false;
+  const at=x=>{ const r=sc.getBoundingClientRect(); seekTo((x-r.left)/r.width); };
+  sc.onpointerdown=e=>{ drag=true; sc.setPointerCapture(e.pointerId); at(e.clientX); };
+  sc.onpointermove=e=>{ if(drag) at(e.clientX); };
+  sc.onpointerup=()=>drag=false;
+  $('#themeBtn').onclick=()=>{
+    const cur=document.documentElement.getAttribute('data-theme');
+    document.documentElement.setAttribute('data-theme', cur==='dark'?'light':cur==='light'?'dark':(matchMedia('(prefers-color-scheme:dark)').matches?'light':'dark'));
   };
-  addEventListener('keydown', e => {
-    if (e.target.tagName === 'INPUT') return;
-    if (e.key === ' '){ e.preventDefault(); play(); }
-    if (e.key === 'r') replay();
-  });
+  addEventListener('keydown',e=>{ if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT')return; if(e.key===' '){ e.preventDefault(); play(); } });
 }
 boot();
 </script>

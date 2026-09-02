@@ -101,6 +101,12 @@ def get_case(case_id: str):
         raise HTTPException(404, f"no run {case_id!r}")
 
 
+import shutil as _shutil
+import subprocess as _subprocess
+
+AUDIO_CLIP_SECONDS = 90
+
+
 @app.get("/api/cases/{case_id}/audio")
 def get_audio(case_id: str):
     try:
@@ -109,7 +115,18 @@ def get_audio(case_id: str):
         raise HTTPException(404, case_id)
     if not src or not is_audio(src) or not Path(src).exists():
         raise HTTPException(404, "no audio for this case")
-    return FileResponse(src)  # FileResponse serves Range requests, so the player can seek
+    # serve only a short opening clip so the demo does not stream an hour of audio
+    clip = RUNS_DIR / case_id / f"_clip_{AUDIO_CLIP_SECONDS}s.mp3"
+    if not clip.exists() and _shutil.which("ffmpeg"):
+        try:
+            _subprocess.run(
+                ["ffmpeg", "-y", "-hide_banner", "-loglevel", "error", "-i", src,
+                 "-t", str(AUDIO_CLIP_SECONDS), "-c:a", "libmp3lame", "-q:a", "6", str(clip)],
+                check=True,
+            )
+        except Exception:  # noqa: BLE001
+            pass
+    return FileResponse(clip if clip.exists() else src)
 
 
 @app.get("/api/cases/{case_id}/status")

@@ -165,7 +165,7 @@ select{font-family:var(--sans);font-size:12.5px;color:var(--ink);background:var(
     <button class="play" id="playBtn" aria-label="Play / pause">&#9654;</button>
     <div class="scrub" id="scrub"><div class="fill" id="scrubFill"></div><div class="knob" id="scrubKnob"></div></div>
     <span class="clk tnum" id="clk">00:00</span>
-    <span class="audiotag" id="audioTag" hidden>&#9834; first 90s</span>
+    <span class="audiotag" id="audioTag" hidden>&#9834; real OR audio</span>
     <span class="tip" id="tip">hover a line to see where it came from</span>
   </div>
 </div>
@@ -463,7 +463,7 @@ function setupAudio(D){
   const a=$('#audio'), tag=$('#audioTag');
   a.pause(); PI.playing=false; $('#playBtn').innerHTML='&#9654;';
   if (PI.live && D.has_audio){
-    a.src='/api/cases/'+PI.id+'/audio'; tag.hidden=false;
+    a.src='/api/cases/'+PI.id+'/audio?v='+(D.audio_bytes||1); tag.hidden=false;
     a.onended=()=>{ PI.playing=false; $('#playBtn').innerHTML='&#9654;'; };
     a.ontimeupdate=()=>{ if(!a.paused){ PI.playT=a.currentTime; followPlay(); } };
     PI.audio=a;

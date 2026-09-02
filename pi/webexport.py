@@ -136,10 +136,12 @@ def export_case(cf: CaseFile) -> dict[str, Any]:
             links[kind] = _draft_links(draft["text"], final, data["events"], events_by_id)
 
     src = cf.source_path or ""
+    has_audio = bool(src and is_audio(src) and Path(src).exists())
     return {
         "case_id": cf.case_id,
         "source": src.split("/")[-1],
-        "has_audio": bool(src and is_audio(src) and Path(src).exists()),
+        "has_audio": has_audio,
+        "audio_bytes": Path(src).stat().st_size if has_audio else 0,
         "profile": {
             "id": prof.id, "label": prof.label, "care_setting": prof.care_setting,
             "phases": prof.phases, "handoff_name": prof.handoff.name,

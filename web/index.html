@@ -121,6 +121,8 @@ select{padding-right:26px;background-image:linear-gradient(45deg,transparent 50%
 .scrub .knob{position:absolute;top:50%;width:13px;height:13px;border-radius:50%;background:var(--accent);border:2px solid var(--surface);transform:translate(-50%,-50%);box-shadow:0 1px 3px rgba(0,0,0,.2)}
 .tclock{font-family:var(--mono);font-size:11px;color:var(--ink-soft);min-width:76px;text-align:right}
 .tclock b{color:var(--ink)}
+#audioTag{color:var(--accent-ink);border:1px solid var(--accent-line);border-radius:4px;padding:1px 6px;flex:none}
+#audio{display:none}
 .tl-wrap{flex:1;overflow-y:auto;position:relative}
 .tl{padding:6px 14px 80px;display:flex;flex-direction:column}
 .tl-phase{
@@ -247,7 +249,9 @@ select{padding-right:26px;background-image:linear-gradient(45deg,transparent 50%
         <button class="play" id="playBtn" aria-label="Play">&#9654;</button>
         <div class="scrub" id="scrub"><div class="fill" id="scrubFill"></div><div class="knob" id="scrubKnob"></div></div>
         <span class="tclock tnum" id="transClock">00:00</span>
+        <span class="lbl" id="audioTag" hidden>&#9834; audio</span>
       </div>
+      <audio id="audio" preload="none"></audio>
       <div class="tl-wrap" id="tlWrap"><div class="tl" id="tl"></div></div>
     </section>
 
@@ -279,7 +283,7 @@ const clock = s => { s = Math.max(0, Math.round(s)); const m = Math.floor(s/60),
 const ROLE_LABEL = { surgeon:'surgeon', anesthesia:'anesthesia', circulating_nurse:'circ. nurse', scrub_nurse:'scrub nurse', assistant:'assistant', perfusionist:'perfusion', other:'other' };
 const EV_LABEL = { phase_transition:'phase', medication_given:'medication', incision:'incision', conversion:'conversion', implant_placed:'implant', line_placed:'line', drain_placed:'drain', device_step:'device', blood_loss:'blood loss', hemodynamic_event:'hemodynamic', transfusion:'transfusion', count_status:'count', specimen:'specimen', complication:'complication', equipment_issue:'equipment', personnel_change:'personnel', disposition:'disposition' };
 
-const PI = { cases:{}, id:null, D:null, playT:1e9, dur:1, hotEv:new Set(), hotTurn:new Set(), tab:'handoff', roleOff:new Set(), q:'', playing:false, raf:0 };
+const PI = { cases:{}, id:null, D:null, playT:1e9, dur:1, hotEv:new Set(), hotTurn:new Set(), tab:'handoff', roleOff:new Set(), q:'', playing:false, raf:0, audio:null };
 
 /* ---------- data loading ---------- */
 async function boot(){
@@ -349,7 +353,25 @@ async function loadCase(id){
   $('#caseSel').value = id;
   $('#profSel').value = D.profile.id;
   $('#srcInfo').textContent = D.source ? ('src: ' + D.source) : '';
+  setupAudio(D);
   renderAll();
+}
+
+function setupAudio(D){
+  const a = $('#audio'), tag = $('#audioTag');
+  a.pause();
+  if (PI.live && D.has_audio){
+    a.src = '/api/cases/' + PI.id + '/audio';
+    tag.hidden = false;
+    a.onloadedmetadata = () => { if (isFinite(a.duration) && a.duration > 1) { PI.dur = a.duration; syncPlay(); } };
+    a.ontimeupdate = () => { if (!a.paused){ PI.playT = a.currentTime; paintPlaying(); } };
+    a.onended = () => { PI.playing = false; $('#playBtn').innerHTML = '&#9654;'; };
+    PI.audio = a;
+  } else {
+    a.removeAttribute('src'); a.load();
+    tag.hidden = true;
+    PI.audio = null;
+  }
 }
 
 function buildProfileSelect(){
@@ -710,6 +732,7 @@ function syncPlay(){
 function setPlayFromX(clientX){
   const r = $('#scrub').getBoundingClientRect();
   PI.playT = Math.max(0, Math.min(1, (clientX - r.left) / r.width)) * PI.dur;
+  if (PI.audio && isFinite(PI.audio.duration)) PI.audio.currentTime = Math.min(PI.playT, PI.audio.duration - 0.1);
   paintPlaying();
 }
 let _lastTlPaint = 0;
@@ -737,6 +760,15 @@ function paintPlaying(force){
 function play(){
   PI.playing = !PI.playing;
   $('#playBtn').innerHTML = PI.playing ? '&#10073;&#10073;' : '&#9654;';
+  if (PI.audio){
+    if (PI.playing){
+      if (PI.playT >= PI.dur - 0.5) { PI.playT = 0; PI.audio.currentTime = 0; }
+      PI.audio.play();
+    } else {
+      PI.audio.pause(); renderTimeline();
+    }
+    return;
+  }
   if (!PI.playing) { cancelAnimationFrame(PI.raf); renderTimeline(); return; }
   if (PI.playT >= PI.dur) PI.playT = 0;
   let last = performance.now();
@@ -749,6 +781,7 @@ function play(){
   PI.raf = requestAnimationFrame(step);
 }
 function replay(){
+  if (PI.audio){ PI.audio.pause(); PI.playing = false; $('#playBtn').innerHTML = '&#9654;'; }
   if (!PI.D || !PI.D.events.length){ PI.playT = 1e9; renderAll(); return; }
   if (matchMedia('(prefers-reduced-motion:reduce)').matches){ PI.playT = 1e9; renderAll(); return; }
   PI.playT = 0; renderTimeline(); syncPlay();

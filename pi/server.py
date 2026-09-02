@@ -16,11 +16,12 @@ import time
 from pathlib import Path
 
 from fastapi import FastAPI, Form, HTTPException, UploadFile
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 
 from .casefile import RUNS_DIR, CaseFile
 from .graph import run_pipeline
 from .profile import SiteProfile, available
+from .stt import is_audio
 from .webexport import export_case
 
 WEB_DIR = Path(__file__).resolve().parent.parent / "web"
@@ -98,6 +99,17 @@ def get_case(case_id: str):
         return JSONResponse(export_case(CaseFile.load(case_id)))
     except FileNotFoundError:
         raise HTTPException(404, f"no run {case_id!r}")
+
+
+@app.get("/api/cases/{case_id}/audio")
+def get_audio(case_id: str):
+    try:
+        src = CaseFile.load(case_id).source_path
+    except FileNotFoundError:
+        raise HTTPException(404, case_id)
+    if not src or not is_audio(src) or not Path(src).exists():
+        raise HTTPException(404, "no audio for this case")
+    return FileResponse(src)  # FileResponse serves Range requests, so the player can seek
 
 
 @app.get("/api/cases/{case_id}/status")

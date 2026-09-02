@@ -8,10 +8,12 @@ Adds two things the raw casefile doesn't have:
 from __future__ import annotations
 
 import re
+from pathlib import Path
 from typing import Any
 
 from .casefile import CaseFile
 from .profile import SiteProfile
+from .stt import is_audio
 
 # state field -> (how to recognise it in draft text, human label)
 _FACT_FIELDS = ["ebl_ml", "meds", "implants", "drains", "lines", "transfusion_totals",
@@ -133,9 +135,11 @@ def export_case(cf: CaseFile) -> dict[str, Any]:
         if draft.get("text") and not draft["text"].startswith("["):
             links[kind] = _draft_links(draft["text"], final, data["events"], events_by_id)
 
+    src = cf.source_path or ""
     return {
         "case_id": cf.case_id,
-        "source": (cf.source_path or "").split("/")[-1],
+        "source": src.split("/")[-1],
+        "has_audio": bool(src and is_audio(src) and Path(src).exists()),
         "profile": {
             "id": prof.id, "label": prof.label, "care_setting": prof.care_setting,
             "phases": prof.phases, "handoff_name": prof.handoff.name,

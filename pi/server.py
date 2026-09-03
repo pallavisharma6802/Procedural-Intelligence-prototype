@@ -64,7 +64,7 @@ def _run_in_thread(case_id: str, source: Path, profile: str) -> None:
 
 # cases shown first, in this order, when present
 _FEATURED = ["case01_lapchole", "case04_cath_pci", "case03_trauma_exlap", "case02_tka_uneventful",
-             "case01_uk", "mmor_007_TKA"]
+             "primock_d1c01", "primock_d2c01", "case01_uk", "mmor_007_TKA"]
 
 
 @app.get("/api/cases")

@@ -208,7 +208,7 @@ select:hover{border-color:var(--line-strong);background-color:var(--surface-3)}
       <div class="knob" id="scrubKnob"></div>
     </div>
     <span class="clk tnum" id="clk">00:00</span>
-    <span class="audiotag" id="audioTag" hidden>&#9834; OR audio</span>
+    <span class="audiotag" id="audioTag" hidden>&#9834; audio</span>
     <span class="tip" id="tip">hover a line to see where it came from</span>
   </div>
 </div>
@@ -228,12 +228,13 @@ const ROLE = {
   surgeon:{label:'Surgeon',c:'var(--r-surgeon)'}, anesthesia:{label:'Anesthesia',c:'var(--r-anesthesia)'},
   circulating_nurse:{label:'Nurse',c:'var(--r-nurse)'}, scrub_nurse:{label:'Scrub',c:'var(--r-scrub)'},
   assistant:{label:'Assistant',c:'var(--r-surgeon)'}, perfusionist:{label:'Perfusion',c:'var(--r-other)'},
+  clinician:{label:'Clinician',c:'var(--r-surgeon)'}, patient:{label:'Patient',c:'var(--r-nurse)'},
   other:{label:'',c:'var(--r-other)'},
 };
 const roleOf = t => ROLE[t.role] || ROLE.other;
-const KIND = { phase_transition:'phase', medication_given:'medication', incision:'incision', conversion:'conversion', implant_placed:'implant', line_placed:'line', drain_placed:'drain', device_step:'step', blood_loss:'blood loss', hemodynamic_event:'hemodynamics', transfusion:'transfusion', count_status:'count', specimen:'specimen', complication:'complication', equipment_issue:'equipment', personnel_change:'personnel', disposition:'disposition' };
+const KIND = { phase_transition:'phase', medication_given:'medication', incision:'incision', conversion:'conversion', implant_placed:'implant', line_placed:'line', drain_placed:'drain', device_step:'step', finding:'finding', blood_loss:'blood loss', hemodynamic_event:'hemodynamics', transfusion:'transfusion', count_status:'count', specimen:'specimen', complication:'complication', equipment_issue:'equipment', personnel_change:'personnel', disposition:'disposition' };
 const EVROLE = { phase_transition:'circulating_nurse', medication_given:'anesthesia', hemodynamic_event:'anesthesia', transfusion:'anesthesia', count_status:'circulating_nurse', incision:'surgeon', conversion:'surgeon', implant_placed:'surgeon', drain_placed:'surgeon', specimen:'surgeon', complication:'surgeon', disposition:'surgeon' };
-const TITLE = { case01_lapchole:'Lap chole → open', case01_uk:'Lap chole → open (NHS)', case03_trauma_exlap:'Trauma laparotomy', case04_cath_pci:'Coronary PCI', case02_tka_uneventful:'Routine knee replacement', mmor_007_TKA:'MM-OR robotic knee', mmor_007_audio:'MM-OR knee (audio)' };
+const TITLE = { case01_lapchole:'Lap chole → open', case01_uk:'Lap chole → open (NHS)', case03_trauma_exlap:'Trauma laparotomy', case04_cath_pci:'Coronary PCI', case02_tka_uneventful:'Routine knee replacement', mmor_007_TKA:'MM-OR robotic knee', mmor_007_audio:'MM-OR knee (audio)', primock_d1c01:'GP consult · gastroenteritis', primock_d1c02:'GP consult · eczema flare', primock_d2c01:'GP consult · hearing loss' };
 
 const PI = { cases:{}, id:null, D:null, dur:1, playT:1e9, tab:'timeline', hotEv:new Set(), hotTurn:new Set(), playing:false, raf:0, audio:null, live:false };
 
@@ -247,7 +248,7 @@ async function boot(){
   if (PI.live){ live.forEach(c=>{ PI.cases[c.case_id]=null; sel.append(new Option(label(c.case_id,c.source),c.case_id)); }); ids=live.map(c=>c.case_id); }
   else { PI.cases=bundle; ids=Object.keys(bundle); ids.forEach(id=>sel.append(new Option(label(id,bundle[id].source),id))); }
   if (!ids.length){ $('#loading').textContent='no cases'; return; }
-  ['default_or','uk_or','cath_lab','mmor_robotic'].forEach(p=>$('#profSel').append(new Option(p.replace(/_/g,' '),p)));
+  ['default_or','uk_or','cath_lab','mmor_robotic','primary_care'].forEach(p=>$('#profSel').append(new Option(p.replace(/_/g,' '),p)));
   sel.onchange=()=>load(sel.value);
   $('#profSel').onchange=()=>{ const p=$('#profSel').value; if(p===PI.D.profile.id)return; PI.live?reprofile(p):(($('#profSel').value=PI.D.profile.id), tip('profile switching needs the local server')); };
   wire();
@@ -371,6 +372,7 @@ function snapshot(){
     `<span class="sev-label">${sev}</span>`,
     `phase <b>${(S.phase||'').replace(/_/g,' ')}</b>`,
   ];
+  if ((S.findings||[]).length) parts.push(chip(S.findings.length + ' finding' + (S.findings.length>1?'s':'')));
   if (S.ebl_ml!=null) parts.push(chip(`EBL ${S.ebl_ml} mL`));
   const tx=S.transfusion_totals||{}; if (Object.keys(tx).length) parts.push(chip(Object.entries(tx).map(([k,v])=>`${v} ${k}`).join(', ')));
   if ((S.implants||[]).length) parts.push(chip('implant'));
@@ -390,6 +392,7 @@ function severity(S){
 function evText(e){
   const p=e.payload||{};
   if (e.type==='phase_transition') return (p.phase||'').replace(/_/g,' ');
+  if (e.type==='finding') return p.description||'';
   if (e.type==='medication_given') return [p.name,p.dose,p.route].filter(Boolean).join(' ');
   if (e.type==='blood_loss') return 'about '+p.ebl_ml+' mL';
   if (e.type==='transfusion') return [p.units,p.product].filter(Boolean).join(' ');

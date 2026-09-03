@@ -21,6 +21,8 @@ ROLES = [
     "circulating_nurse",
     "scrub_nurse",
     "perfusionist",
+    "clinician",   # non-OR settings: the doctor in a consultation
+    "patient",
     "other",
 ]
 
@@ -49,6 +51,7 @@ class EventType(str, Enum):
     line_placed = "line_placed"
     drain_placed = "drain_placed"
     device_step = "device_step"
+    finding = "finding"  # symptom reported, exam finding, or clinical impression (non-OR settings)
     conversion = "conversion"
     blood_loss = "blood_loss"
     hemodynamic_event = "hemodynamic_event"
@@ -112,6 +115,7 @@ class CaseState(BaseModel):
     drains: list[str] = Field(default_factory=list)
     converted: Optional[str] = None  # e.g. "laparoscopic -> open"
     counts: Optional[str] = None  # e.g. "correct x2" | "incorrect" | "pending"
+    findings: list[str] = Field(default_factory=list)  # symptoms / exam findings / impressions
     complications: list[Complication] = Field(default_factory=list)
     open_concerns: list[str] = Field(default_factory=list)
     disposition: Optional[str] = None

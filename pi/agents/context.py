@@ -13,14 +13,23 @@ import asyncio
 from ..casefile import CaseFile
 from ..llm import complete_json, info
 from ..mcp_client import load_pool
+from ..profile import active_profile
 from ..schemas import CaseContext
 from .base import Agent
 
-SYSTEM = """From this OR transcript excerpt, extract the case set-up. Return JSON:
+SYSTEM_OR = """From this OR transcript excerpt, extract the case set-up. Return JSON:
 {"patient_descriptor": "e.g. 54-year-old man (age/sex only, NEVER a name)",
  "planned_procedure": "...",
  "indication": "preoperative diagnosis / reason for surgery",
  "anesthesia_type": "...",
+ "evidence_turn_ids": ["t0001"]}
+Use null for any field not stated. Do not guess."""
+
+SYSTEM_CONSULT = """From this clinical consultation excerpt, extract the set-up. Return JSON:
+{"patient_descriptor": "e.g. 34-year-old man (age/sex only, NEVER a name); null if not stated",
+ "planned_procedure": null,
+ "indication": "the presenting complaint as a short phrase, e.g. '3 days of diarrhoea' or 'left-sided hearing loss'",
+ "anesthesia_type": null,
  "evidence_turn_ids": ["t0001"]}
 Use null for any field not stated. Do not guess."""
 
@@ -47,8 +56,11 @@ class ContextAgent(Agent):
         missing = [f for f in ("patient_descriptor", "planned_procedure", "indication", "anesthesia_type")
                    if not getattr(ctx, f)]
         if missing:
+            prof = active_profile()
+            consult = "finding" in (prof.event_focus or []) or "consult" in prof.care_setting
+            sys_prompt = SYSTEM_CONSULT if consult else SYSTEM_OR
             try:
-                data = await asyncio.to_thread(complete_json, SYSTEM, excerpt) or {}
+                data = await asyncio.to_thread(complete_json, sys_prompt, excerpt) or {}
                 for f in missing:
                     if data.get(f):
                         setattr(ctx, f, data[f])

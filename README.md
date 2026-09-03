@@ -13,8 +13,9 @@ provenance back to the events and transcript lines that produced it.
   projections of the same `CaseState`, so they cannot disagree with each other.
 - **Provenance everywhere.** `pi show <case> provenance` traces each state field to its events
   and their verbatim transcript quotes; the web UI makes the same links clickable.
-- **Hospital-agnostic.** Phase vocabulary, handoff format (I-PASS / SBAR), note headings,
-  terminology, and family-letter style live in a JSON site profile. New hospital, one file.
+- **Setting-agnostic.** Phase vocabulary, event vocabulary, handoff format (I-PASS / SBAR /
+  SOAP), note headings, terminology, and family-letter style live in a JSON site profile. The
+  same pipeline runs an OR case, a cath-lab case, and a primary-care consultation.
 - **Real context over MCP.** The `context` step pulls procedure, indication, home meds,
   allergies, and problem list from a connected clinical-context MCP server; the transcript only
   fills gaps.
@@ -65,11 +66,17 @@ The pipeline is fixed. Anything that differs between hospitals lives in a JSON p
 | `opnote_sections` | note headings, in order |
 | `family` | language, reading level, closing line, notes |
 | `terminology` | canonical to local term (`OR` -> `theatre`, `surgeon` -> `cardiologist`) |
-| `event_focus` | event types the safety sweep emphasises |
+| `event_focus` | event types to emphasise; `finding` here switches the extractor to consultation mode |
 
-Four profiles ship: `default_or` (US, I-PASS), `uk_or` (NHS, SBAR), `cath_lab` (percutaneous,
-SBAR), `mmor_robotic` (robot phases). The profile used is recorded in the run's `casefile.json`
-and reused by `pi stage`.
+Five profiles ship: `default_or` (US, I-PASS), `uk_or` (NHS, SBAR), `cath_lab` (percutaneous,
+SBAR), `mmor_robotic` (robot phases), and `primary_care` (UK GP consultation, SOAP note +
+after-visit summary). The profile used is recorded in the run's `casefile.json` and reused by
+`pi stage`.
+
+A consultation profile makes the extractor emit `finding` events (one per symptom, history
+item, examination finding, or working diagnosis) instead of surgical events, and runs a single
+non-overlapping pass instead of the windowed + safety-sweep pass, since the content is dense
+rather than sparse. Nothing else in the pipeline changes.
 
 ## Clinical context over MCP
 
@@ -131,6 +138,7 @@ limit and to render the sample OR audio (`scripts/make_audio.py`).
 ./.venv/bin/python -m pi.cli run data/synthetic/case01_lapchole.srt
 ./.venv/bin/python -m pi.cli run recording.m4a -c my_case          # audio/video -> Whisper -> pipeline
 ./.venv/bin/python -m pi.cli run case.srt --profile uk_or          # pick a site profile
+./.venv/bin/python -m pi.cli run consult.mp3 --profile primary_care  # GP consultation -> SOAP note
 
 ./.venv/bin/python -m pi.cli profiles                              # list site profiles
 ./.venv/bin/python -m pi.cli mcp                                   # list connected MCP servers
@@ -190,6 +198,25 @@ Behavioural checks these cases exist to verify:
 - `case04` (percutaneous PCI): no "incision" language anywhere; handoff format is SBAR; family
   note is framed around a catheter procedure and closes with the cardiologist, not a surgeon.
 
+### Real consultation audio (PriMock57)
+
+Two consultations from [PriMock57](https://github.com/babylonhealth/primock57) — acted
+primary-care consultations, CC-BY-4.0, doctor and patient audio mixed to one track — run with
+the `primary_care` profile (on Groq `qwen/qwen3.8-27b`, which keeps the finding list tighter on
+dense dialogue than the flash model does):
+
+| case | complaint | turns | events | drafts accepted |
+|---|---|---:|---:|:---:|
+| `primock_d1c01` | 3-day diarrhoea | 98 | 15 | 3 / 3 |
+| `primock_d2c01` | left-ear hearing loss | 77 | 9 | 3 / 3 |
+
+Whisper transcribes the mixed audio, one LLM pass attributes each line to clinician or patient,
+the extractor emits `finding` events, and the three projections become a **SOAP consultation
+note**, a **GP letter**, and an **after-visit summary** written to the patient. The generated
+note tracks the consulting clinician's own note (shipped as `*_note.json`) — same history in the
+same clipped style (`3/7 hx`, `PMH`, `imp`, `plan`), same impression, same follow-up interval —
+with no fabricated examination findings on a remote consultation.
+
 ### Profile swing
 
 The same `case01_lapchole` transcript with `--profile uk_or`: handoff switches from I-PASS to
@@ -241,19 +268,23 @@ pi/
   webexport.py        casefile -> web JSON + provenance links
 mcp_servers/          reference clinical-context MCP server + sample records
 web/                  single-page UI, build script, baked standalone
-data/synthetic/       hand-authored cases + ground truth
-scripts/              make_audio.py (scenario -> multi-voice OR audio), MM-OR download helper
+data/synthetic/       hand-authored cases + TTS-rendered audio + ground truth
+data/primock/         PriMock57-derived consultation audio + reference notes (CC-BY-4.0)
+scripts/              make_audio.py, fetch_primock.py, demo_setup.sh, MM-OR download helper
 ```
 
 ## Data and PHI
 
-`data/synthetic/` holds hand-authored cases with ground-truth JSON; this drives development and
-`pi evaluate`. MM-OR transcripts and audio (`scripts/download_mm-or.sh`) are a real-world stress
-test and are not committed; the dataset requires a form at <https://github.com/egeozsoy/MM-OR>.
+`data/synthetic/` holds hand-authored cases with ground-truth JSON and multi-voice audio
+rendered from them (`scripts/make_audio.py`); this drives development and `pi evaluate`.
+`data/primock/` holds two [PriMock57](https://github.com/babylonhealth/primock57) consultations
+(acted, not real patients) redistributed under CC-BY-4.0 — see `data/primock/README.md` for
+attribution. MM-OR transcripts (`scripts/download_mm-or.sh`) are a real-world stress test and
+are not committed; that dataset requires a form at <https://github.com/egeozsoy/MM-OR>.
 
-Use synthetic, MM-OR, or properly de-identified research data only, never a real patient
-recording obtained yourself. `PI_STT=groq` uploads audio to Groq; use `PI_STT=local` for
-anything sensitive.
+Use synthetic, openly-licensed, or properly de-identified research data only, never a real
+patient recording obtained yourself. `PI_STT=groq` uploads audio to Groq; use `PI_STT=local`
+for anything sensitive.
 
 ## Limitations
 
@@ -262,4 +293,9 @@ anything sensitive.
 - The shipped profiles are starting points, not validated against any hospital's templates.
 - Extraction quality is bounded by the model; `gemini-2.5-pro` or a larger Groq model raises
   event recall over the defaults.
-- The demo OR audio is TTS-rendered from the scenario scripts, not real intraoperative audio.
+- The demo OR audio is TTS-rendered from the scenario scripts. The only real recorded audio in
+  the repo is the two PriMock57 consultations, which are acted, not real patients — public
+  intraoperative audio with a usable licence does not exist.
+- The `primary_care` profile reuses the surgical `CaseState` shape (findings land in a generic
+  `findings` list); a purpose-built consultation state would track problems and plan items
+  separately.

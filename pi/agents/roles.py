@@ -42,13 +42,26 @@ one passing instruments is a scrub nurse. If genuinely unclear, use "other".
 
 Return JSON: {{"roles": {{"<speaker id>": "<role>", ...}}}}"""
 
-SYSTEM_PERLINE = f"""You are attributing each line of an operating-room transcript to the person
-most likely saying it. Roles: {", ".join(ROLES)}.
+_OR_ROLES = [r for r in ROLES if r not in ("clinician", "patient")]
+_CONSULT_ROLES = ["clinician", "patient", "other"]
+
+SYSTEM_PERLINE_OR = f"""You are attributing each line of an operating-room transcript to the person
+most likely saying it. Roles: {", ".join(_OR_ROLES)}.
 
 Clues: the person running the time-out / calling operative steps / asking for instruments is the
 surgeon; whoever reports blood pressure, heart rate, drugs and the airway is anesthesia; whoever
 reports instrument/sponge counts, fetches supplies and updates the room is a circulating nurse;
 whoever passes instruments is a scrub nurse. Use "other" only when there is no signal.
+
+You get numbered lines. Return JSON {{"roles": {{"0": "<role>", "1": "<role>", ...}}}} with an
+entry for every line number."""
+
+SYSTEM_PERLINE_CONSULT = f"""You are attributing each line of a clinical consultation transcript to
+the speaker. Roles: {", ".join(_CONSULT_ROLES)}.
+
+The clinician asks the questions, summarises, explains the diagnosis, and gives the plan and
+safety-netting advice. The patient describes their symptoms, history and concerns and answers
+questions. Use "other" only for a third party (e.g. a relative).
 
 You get numbered lines. Return JSON {{"roles": {{"0": "<role>", "1": "<role>", ...}}}} with an
 entry for every line number."""
@@ -88,10 +101,13 @@ class RolesAgent(Agent):
         return cf
 
     async def _infer_per_line(self, cf: CaseFile) -> None:
+        prof = active_profile()
+        consult = "finding" in (prof.event_focus or []) or "consult" in prof.care_setting
+        sys_prompt = SYSTEM_PERLINE_CONSULT if consult else SYSTEM_PERLINE_OR
         lines = "\n".join(f"{i}: {t.text}" for i, t in enumerate(cf.turns))
-        user = f"CARE SETTING: {active_profile().care_setting}\n\nLINES:\n{lines}"
+        user = f"CARE SETTING: {prof.care_setting}\n\nLINES:\n{lines}"
         try:
-            data = await asyncio.to_thread(complete_json, SYSTEM_PERLINE, user)
+            data = await asyncio.to_thread(complete_json, sys_prompt, user)
             raw = data.get("roles", {}) if isinstance(data, dict) else {}
         except Exception as exc:  # noqa: BLE001
             cf.log(self.name, f"per-line inference failed: {exc}")

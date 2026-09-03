@@ -19,8 +19,14 @@ SWEEP_CHUNK = int(os.environ.get("PI_SWEEP_CHUNK", "220"))
 _MAX_PROMPT_CHARS = int(os.environ.get("PI_MAX_PROMPT_CHARS", "11000"))
 
 
-def _types(profile: SiteProfile) -> str:
+def _types(profile: SiteProfile, consult: bool) -> str:
     phases = " | ".join(profile.phases)
+    if consult:
+        return f"""- phase_transition   payload: {{"phase": one of {phases}}}  (use the closest one)
+- finding            payload: {{"description","category"?:"symptom|exam|history|impression"}}  one distinct symptom, one piece of relevant history, one examination finding, or the clinician's working diagnosis. One fact per event; do not restate the same fact in different words.
+- medication_given   payload: {{"name","dose"?,"route"?}}   any drug taken, tried, or advised
+- complication       payload: {{"description","resolved"?}}   a red-flag / safety concern raised
+- disposition        payload: {{"destination": e.g. "follow-up", "referral", "prescription", "self-care", "home", "clinic", "A&E", "detail"?}}   the management plan and follow-up"""
     return f"""- phase_transition   payload: {{"phase": one of {phases}}}  (use the closest one)
 - medication_given   payload: {{"name","dose"?,"route"?}}
 - incision           payload: {{"site"?}}   (for a percutaneous procedure, the first vascular/needle access)
@@ -41,24 +47,40 @@ def _types(profile: SiteProfile) -> str:
 
 
 def system_prompt(profile: SiteProfile) -> str:
-    return f"""You are a clinical scribe extracting a structured procedural timeline from a \
-{profile.care_setting.replace("_", " ")} transcript window. Return ONLY events that matter for a \
-handoff, a procedure note, or a family update. Ignore small talk, equipment banter and logistics.
-
-Event types (use exactly these):
-{_types(profile)}
-
-Guidance:
+    consult = "finding" in (profile.event_focus or []) or getattr(profile, "consultation", False)
+    guidance = (
+        """Guidance for a consultation / clinic transcript:
+- Emit a `finding` for each distinct symptom the patient reports (onset, character, associated
+  symptoms, red-flag negatives), each relevant piece of history (past conditions, medications,
+  social history), each examination finding, and the clinician's working diagnosis (impression).
+- `medication_given` covers any drug discussed - already taken, tried, or advised.
+- `disposition` is the plan: follow-up interval, referral, safety-netting, prescription, or
+  self-care advice.
+- A `complication` here is a red-flag / safety concern raised during the consultation."""
+        if consult else
+        """Guidance:
 - A `complication` is any unintended adverse event: bleeding beyond what is expected, organ/vessel
   injury, inability to obtain the critical view, hemodynamic instability needing intervention,
   unplanned conversion. When surgery is converted lap->open, emit BOTH a `conversion` event AND a
   `complication` describing why.
 - A drain (Jackson-Pratt, Blake, chest tube) is `drain_placed`, never `implant_placed`.
-- Emit a fresh `blood_loss` event each time an EBL number is stated.
+- Emit a fresh `blood_loss` event each time an EBL number is stated."""
+    )
+    return f"""You are a clinical scribe extracting a structured timeline from a \
+{profile.care_setting.replace("_", " ")} transcript window. Return ONLY events that matter for a \
+handoff, a clinical note, or a patient-facing summary. Ignore small talk and logistics.
+
+Event types (use exactly these):
+{_types(profile, consult)}
+
+{guidance}
 
 Return JSON: {{"events":[{{"type","payload","evidence_turn_ids":["t0007"],"confidence":0-1}}]}}
 Return {{"events":[]}} if the window has nothing clinically meaningful.
+{_EXAMPLE if not consult else _CONSULT_EXAMPLE}"""
 
+
+_EXAMPLE = """
 EXAMPLE
 window:
   t0004 [00:05:30] SURGEON: Let's do our time out...
@@ -66,13 +88,32 @@ window:
   t0013 [00:24:00] SURGEON: I'm not comfortable continuing laparoscopically, converting to open.
   t0024 [00:52:00] SURGEON: Placing a Jackson-Pratt drain in the fossa.
 output:
-{{"events":[
- {{"type":"phase_transition","payload":{{"phase":"timeout"}},"evidence_turn_ids":["t0004"],"confidence":0.9}},
- {{"type":"medication_given","payload":{{"name":"cefazolin","dose":"2 g","route":"IV"}},"evidence_turn_ids":["t0005"],"confidence":0.95}},
- {{"type":"conversion","payload":{{"from":"laparoscopic","to":"open"}},"evidence_turn_ids":["t0013"],"confidence":0.9}},
- {{"type":"complication","payload":{{"description":"unable to proceed laparoscopically, converted to open"}},"evidence_turn_ids":["t0013"],"confidence":0.8}},
- {{"type":"drain_placed","payload":{{"type":"Jackson-Pratt","site":"gallbladder fossa"}},"evidence_turn_ids":["t0024"],"confidence":0.9}}
-]}}"""
+{"events":[
+ {"type":"phase_transition","payload":{"phase":"timeout"},"evidence_turn_ids":["t0004"],"confidence":0.9},
+ {"type":"medication_given","payload":{"name":"cefazolin","dose":"2 g","route":"IV"},"evidence_turn_ids":["t0005"],"confidence":0.95},
+ {"type":"conversion","payload":{"from":"laparoscopic","to":"open"},"evidence_turn_ids":["t0013"],"confidence":0.9},
+ {"type":"complication","payload":{"description":"unable to proceed laparoscopically, converted to open"},"evidence_turn_ids":["t0013"],"confidence":0.8},
+ {"type":"drain_placed","payload":{"type":"Jackson-Pratt","site":"gallbladder fossa"},"evidence_turn_ids":["t0024"],"confidence":0.9}
+]}"""
+
+_CONSULT_EXAMPLE = """
+EXAMPLE
+window:
+  t0006 [00:00:40] PATIENT: I've had a cough for about ten days now, bringing up green phlegm
+  t0009 [00:01:10] PATIENT: bit short of breath going up the stairs, not at rest
+  t0012 [00:01:50] CLINICIAN: any chest pain, any fevers? - no chest pain, felt hot a couple of nights
+  t0017 [00:03:00] PATIENT: I've got asthma, I use the blue inhaler most days
+  t0031 [00:07:00] CLINICIAN: sounds like a chest infection. I'll start you on amoxicillin 500 three times a day for five days, and see you back if you're not better in a week
+output:
+{"events":[
+ {"type":"finding","payload":{"description":"10-day productive cough with green sputum","category":"symptom"},"evidence_turn_ids":["t0006"],"confidence":0.9},
+ {"type":"finding","payload":{"description":"exertional breathlessness on stairs, not at rest","category":"symptom"},"evidence_turn_ids":["t0009"],"confidence":0.85},
+ {"type":"finding","payload":{"description":"no chest pain; subjective fevers a couple of nights","category":"symptom"},"evidence_turn_ids":["t0012"],"confidence":0.8},
+ {"type":"finding","payload":{"description":"asthma, uses salbutamol inhaler most days","category":"history"},"evidence_turn_ids":["t0017"],"confidence":0.9},
+ {"type":"finding","payload":{"description":"lower respiratory tract / chest infection","category":"impression"},"evidence_turn_ids":["t0031"],"confidence":0.85},
+ {"type":"medication_given","payload":{"name":"amoxicillin","dose":"500 mg TDS x5 days","route":"oral"},"evidence_turn_ids":["t0031"],"confidence":0.9},
+ {"type":"disposition","payload":{"destination":"follow-up","detail":"review in 1 week if not improving"},"evidence_turn_ids":["t0031"],"confidence":0.9}
+]}"""
 
 
 def sweep_prompt(profile: SiteProfile) -> str:
@@ -85,7 +126,7 @@ case. Read the FULL transcript and extract every safety-critical event, even if 
 Focus on: {focus}.
 
 Event types:
-{_types(profile)}
+{_types(profile, consult=False)}
 
 Be thorough - it is worse to miss a complication or a wrong count than to over-report.
 Return JSON: {{"events":[{{"type","payload","evidence_turn_ids":["t0012"],"confidence":0-1}}]}}"""
@@ -140,28 +181,34 @@ class EventAgent(Agent):
 
     async def run(self, cf: CaseFile) -> CaseFile:
         profile = active_profile()
-        sys_win = system_prompt(profile)
-        sys_sweep = sweep_prompt(profile)
-        wins = _windows(cf.turns)
         sem = asyncio.Semaphore(int(os.environ.get("PI_CONCURRENCY", "1")))
 
         async def guarded(sys_prompt, turns, tag):
             async with sem:
                 return await self._extract(sys_prompt, turns, tag)
 
-        jobs = [guarded(sys_win, w, f"w{i}") for i, w in enumerate(wins)]
-        # whole-transcript safety pass, chunked so the prompt stays bounded on long cases
-        sweep_chunks = [cf.turns[i : i + SWEEP_CHUNK] for i in range(0, len(cf.turns), SWEEP_CHUNK)] or [[]]
-        jobs += [guarded(sys_sweep, c, f"sweep{i}") for i, c in enumerate(sweep_chunks)]
-        results = await asyncio.gather(*jobs)
-        raw = [e for batch in results for e in batch]
+        # Consultations are short and finding-dense: coherent non-overlapping passes over the
+        # transcript avoid the paraphrase duplicates a windowed + sweep pass would produce.
+        consult = "finding" in (profile.event_focus or []) or "consult" in profile.care_setting
+        if consult:
+            avg_len = max(1, len(_fmt(cf.turns)) // max(1, len(cf.turns)))
+            step = max(40, _MAX_PROMPT_CHARS // avg_len)   # ~one prompt-sized chunk, no overlap
+            chunks = [cf.turns[i : i + step] for i in range(0, len(cf.turns), step)] or [[]]
+            raw = [e for batch in await asyncio.gather(
+                *[guarded(system_prompt(profile), c, f"c{i}") for i, c in enumerate(chunks)]
+            ) for e in batch]
+            passes = f"{len(chunks)} consult pass(es)"
+        else:
+            wins = _windows(cf.turns)
+            jobs = [guarded(system_prompt(profile), w, f"w{i}") for i, w in enumerate(wins)]
+            sweep_chunks = [cf.turns[i : i + SWEEP_CHUNK] for i in range(0, len(cf.turns), SWEEP_CHUNK)] or [[]]
+            jobs += [guarded(sweep_prompt(profile), c, f"sweep{i}") for i, c in enumerate(sweep_chunks)]
+            raw = [e for batch in await asyncio.gather(*jobs) for e in batch]
+            passes = f"{len(wins)} windows + {len(sweep_chunks)} sweep"
+
         cf.events = _dedupe(raw)
         _attribute_roles(cf.events, cf.turns)
-        cf.log(
-            self.name,
-            f"{info()}: {len(wins)} windows + {len(sweep_chunks)} sweep -> {len(raw)} raw -> "
-            f"{len(cf.events)} events (profile={profile.id})",
-        )
+        cf.log(self.name, f"{info()}: {passes} -> {len(raw)} raw -> {len(cf.events)} events (profile={profile.id})")
         return cf
 
     async def _extract(self, sys_prompt: str, window: list[Turn], tag: str) -> list[ProceduralEvent]:
@@ -225,10 +272,26 @@ def _num(v):
         return None
 
 
+_FINDING_STOP = {
+    "the", "and", "for", "with", "has", "have", "been", "was", "were", "not", "any", "day",
+    "days", "week", "weeks", "ago", "last", "since", "past", "also", "other", "some", "this",
+    "that", "his", "her", "their", "patient", "reports", "symptom", "symptoms", "history",
+    "described", "onset", "started", "start", "feeling", "felt", "about", "over", "than",
+    "now", "still", "when", "which",
+}
+
+
+def _finding_key(desc: str) -> str:
+    words = [w for w in _slug(desc).split() if len(w) >= 4 and w not in _FINDING_STOP]
+    return "find:" + " ".join(sorted(set(words))[:4])
+
+
 def _dedupe_key(e: ProceduralEvent) -> str:
     """A loose identity for an event, so near-duplicate phrasings collapse."""
     p = e.payload or {}
     t = e.type
+    if t == EventType.finding:
+        return _finding_key(p.get("description", ""))
     if t == EventType.medication_given:
         return "med:" + _slug(p.get("name"))
     if t in (EventType.line_placed, EventType.drain_placed):

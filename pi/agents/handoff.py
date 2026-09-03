@@ -15,8 +15,8 @@ class HandoffAgent(ProjectionAgent):
         return (
             f"{h.intro}\n\n"
             f"Structure ({h.name}), each section on its own line:\n{sections}\n\n"
-            "Include EBL, transfusions, lines, drains, implants and count status when present. "
-            "If the case context lists allergies, state them. Never invent a vital sign, lab "
-            "value or observation."
+            "Include every fact the timeline supports - findings, medications, EBL, transfusions, "
+            "lines, drains, implants, counts - and nothing it does not. If the case context lists "
+            "allergies, state them. Never invent a vital sign, lab value or examination finding."
             f"{gloss}"
         )

@@ -151,6 +151,12 @@ def _apply(prev: CaseState, ev: ProceduralEvent, pm: _PhaseModel) -> CaseState:
     elif ev.type == EventType.hemodynamic_event and p.get("description"):
         s.open_concerns.append(p["description"])
         _prov(s, "open_concerns", ev)
+    elif ev.type == EventType.finding and p.get("description"):
+        entry = p["description"]
+        if p.get("category"):
+            entry = f"[{p['category']}] {entry}"
+        s.findings.append(entry)
+        _prov(s, "findings", ev)
     elif ev.type == EventType.disposition:
         dest = p.get("destination")
         if dest:

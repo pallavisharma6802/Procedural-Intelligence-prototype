@@ -1,0 +1,105 @@
+{
+  "id": "primary_care",
+  "label": "Primary-care consultation (UK)",
+  "care_setting": "primary_care_consultation",
+  "phases": [
+    "greeting",
+    "history",
+    "examination",
+    "assessment",
+    "plan",
+    "safety_netting"
+  ],
+  "phase_synonyms": {
+    "introduction": "greeting",
+    "opening": "greeting",
+    "presenting complaint": "history",
+    "history taking": "history",
+    "hpc": "history",
+    "systems review": "history",
+    "exam": "examination",
+    "on examination": "examination",
+    "observations": "examination",
+    "impression": "assessment",
+    "diagnosis": "assessment",
+    "working diagnosis": "assessment",
+    "management": "plan",
+    "treatment": "plan",
+    "prescription": "plan",
+    "follow up": "safety_netting",
+    "follow-up": "safety_netting",
+    "worsening advice": "safety_netting",
+    "closing": "safety_netting",
+    "incision": "examination",
+    "key_procedure": "assessment"
+  },
+  "procedure_start_phase": "history",
+  "event_focus": [
+    "finding",
+    "medication_given",
+    "disposition",
+    "complication"
+  ],
+  "handoff": {
+    "name": "SOAP note",
+    "intro": "Write the clinician's consultation note in clipped clinical style, the way a GP records it in the record. Abbreviations are fine (hx, PMH, DH, SH, O/E, imp, plan, /7 for days, /12 for months). No invented examination findings, observations, or investigation results — a remote consultation often has none. Do not restate the whole conversation; record only what is clinically relevant.",
+    "sections": [
+      {
+        "label": "History",
+        "guidance": "presenting complaint; onset and duration; character; associated symptoms; relevant positives and pertinent negatives (red-flag negatives explicitly)"
+      },
+      {
+        "label": "Background",
+        "guidance": "PMH, current medications and what has already been tried for this problem, allergies, relevant social history and impact on daily life"
+      },
+      {
+        "label": "Examination",
+        "guidance": "any examination findings or observations stated; if the consultation was remote and none were done, write 'not examined (remote consultation)'"
+      },
+      {
+        "label": "Impression",
+        "guidance": "the clinician's working diagnosis or differential as stated"
+      },
+      {
+        "label": "Plan",
+        "guidance": "investigations, prescription, self-care advice, referral, and the follow-up / review interval"
+      },
+      {
+        "label": "Safety-netting",
+        "guidance": "the specific worsening symptoms the patient was told to watch for and what to do; if none were given, write 'none documented'"
+      }
+    ]
+  },
+  "opnote_sections": [
+    "Date",
+    "Clinician",
+    "Consultation type",
+    "Presenting complaint",
+    "History",
+    "Past medical history",
+    "Medications and allergies",
+    "Examination",
+    "Working diagnosis",
+    "Management plan",
+    "Follow-up",
+    "Safety-netting advice"
+  ],
+  "family": {
+    "language": "English",
+    "reading_level": "about an 8th-grade level",
+    "sentences": "5-7",
+    "closing_line": "Contact the surgery or 111 if you are unsure or things get worse.",
+    "notes": "This is an after-visit summary written TO the patient in the second person. Cover: what you talked about, what the clinician thinks is going on (in plain words), what to do now (medicines, self-care), when you will be seen again, and the specific warning signs that mean you should seek help sooner. Do not invent test results or a firm diagnosis the clinician did not give."
+  },
+  "terminology": {
+    "surgeon": "clinician",
+    "operating room": "consulting room",
+    "OR": "clinic",
+    "operation": "consultation",
+    "procedure": "consultation",
+    "incision": "examination",
+    "PACU": "waiting area",
+    "handoff": "consultation note",
+    "attending": "GP"
+  }
+}

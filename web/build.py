@@ -14,8 +14,8 @@ from pi.webexport import export_case  # noqa: E402
 
 WEB = Path(__file__).resolve().parent
 DEFAULT_CASES = [
-    "case01_lapchole", "case04_cath_pci", "case01_uk", "case03_trauma_exlap",
-    "mmor_007_TKA", "mmor_007_audio", "case02_tka_uneventful",
+    "case01_lapchole", "case04_cath_pci", "case03_trauma_exlap", "case02_tka_uneventful",
+    "case01_uk", "mmor_007_TKA",
 ]
 
 

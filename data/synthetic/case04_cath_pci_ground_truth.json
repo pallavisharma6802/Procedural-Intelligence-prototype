@@ -12,7 +12,7 @@
   ],
   "expected_state": {
     "phase": "handoff",
-    "disposition": "CCU"
+    "disposition": "coronary care"
   },
   "key_facts": {
     "access": "right radial, 6 French sheath",

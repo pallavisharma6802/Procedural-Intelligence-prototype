@@ -63,8 +63,8 @@ def _run_in_thread(case_id: str, source: Path, profile: str) -> None:
 
 
 # cases shown first, in this order, when present
-_FEATURED = ["case01_lapchole", "case04_cath_pci", "case01_uk", "case03_trauma_exlap",
-             "mmor_007_TKA", "mmor_007_audio", "case02_tka_uneventful"]
+_FEATURED = ["case01_lapchole", "case04_cath_pci", "case03_trauma_exlap", "case02_tka_uneventful",
+             "case01_uk", "mmor_007_TKA"]
 
 
 @app.get("/api/cases")
@@ -79,7 +79,7 @@ def list_cases():
             continue
         cid = cf.get("case_id", d.parent.name)
         n_ev = len(cf.get("events", []))
-        if cid not in _FEATURED and (n_ev < 3 or cid in {"or_clip"}):
+        if cid not in _FEATURED:
             continue
         out.append({
             "case_id": cid,

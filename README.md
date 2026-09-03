@@ -19,7 +19,8 @@ provenance back to the events and transcript lines that produced it.
   allergies, and problem list from a connected clinical-context MCP server; the transcript only
   fills gaps.
 - **Audio or text in.** `.srt`/`.vtt`, or audio/video via Whisper (Groq, local, or a diarizing
-  vendor). German MM-OR audio is handled with Whisper translate.
+  vendor). Undiarized audio gets one LLM pass that attributes each line to a clinical role.
+  German MM-OR audio is handled with Whisper translate.
 - **Fact-checked drafts.** A critic pass flags only invented facts (vitals, labs, doses,
   events), verifies each flagged quote, and drives one revision.
 - **Degrades, does not crash.** A rate-limited draft becomes a placeholder; a silent recording
@@ -43,7 +44,7 @@ ingest -> roles -> context -> extract -> reduce -> handoff -> opnote -> family -
 | node | what it does |
 |---|---|
 | `ingest` | parse a caption file, or transcribe audio/video. Backends: Groq Whisper (default), `faster-whisper` local, AssemblyAI/Deepgram (with diarization). `PI_WHISPER_TASK=translate` for non-English audio. |
-| `roles` | map speaker labels to clinical roles. `.srt` prefixes map directly; diarized ids use one LLM call. Events are attributed to the dominant role of their evidence turns. |
+| `roles` | attribute each line to a clinical role. `.srt` prefixes map directly; diarized ids use one LLM call; plain audio gets one LLM call that labels every line by content. Events inherit the dominant role of their evidence turns. |
 | `context` | pull patient set-up from a clinical-context MCP server; infer anything missing from the transcript. |
 | `extract` | windowed workers plus a whole-transcript safety sweep, merged and deduped. |
 | `reduce` | deterministic fold of events into `CaseState` snapshots, advancing through the profile's phase order and recording provenance. |
@@ -109,11 +110,19 @@ file that runs without the server.
 ```bash
 python3 -m venv .venv          # Python 3.9+
 ./.venv/bin/pip install -e .
-cp .env.example .env           # add GROQ_API_KEY, or configure Ollama
+cp .env.example .env
 ```
 
-An LLM provider is required: the Groq API when `GROQ_API_KEY` is set (`qwen/qwen3.8-27b`), else
-a local Ollama model. `ffmpeg` is optional, used to chunk audio over the hosted size limit.
+An LLM provider is required. Auto-detected in this order:
+
+1. **Vertex AI** (Gemini) if Google ADC is present — `gcloud auth application-default login`,
+   then `pip install -e '.[vertex]'`. Model `gemini-2.5-flash`; project and location come from
+   ADC / `us-central1` unless `PI_VERTEX_PROJECT` / `PI_VERTEX_LOCATION` are set.
+2. **Groq** if `GROQ_API_KEY` is set (`qwen/qwen3.8-27b`).
+3. **Ollama** locally.
+
+Override with `PI_PROVIDER`. `ffmpeg` is optional, used to chunk audio over the hosted size
+limit and to render the sample OR audio (`scripts/make_audio.py`).
 
 ## Usage
 
@@ -141,9 +150,10 @@ Set via environment or `.env`:
 | variable | purpose |
 |---|---|
 | `PI_PROFILE` | site profile name or path (default `default_or`) |
-| `PI_PROVIDER` | `groq` \| `ollama` \| `gemini` |
+| `PI_PROVIDER` | `vertex` \| `groq` \| `gemini` \| `ollama` (auto-detected if unset) |
 | `PI_MODEL`, `PI_CRITIC_MODEL` | model overrides |
-| `GROQ_API_KEY` | Groq API key |
+| `PI_VERTEX_PROJECT`, `PI_VERTEX_LOCATION` | Vertex project / region (default: ADC / `us-central1`) |
+| `GROQ_API_KEY`, `GEMINI_API_KEY` | keys for the Groq / public Gemini providers |
 | `PI_STT` | `groq` \| `assemblyai` \| `deepgram` \| `local` |
 | `PI_WHISPER_TASK` | `transcribe` \| `translate` |
 | `PI_MCP_CONFIG`, `PI_MCP` | MCP config path; `PI_MCP=off` disables it |
@@ -151,20 +161,23 @@ Set via environment or `.env`:
 
 ## Results
 
-Model: `qwen/qwen3.8-27b` on Groq. `pi evaluate` scores extracted event types and reconstructed
-state fields against hand-authored ground truth.
+Model: `gemini-2.5-flash` on Vertex AI. The four synthetic cases below run **from audio** —
+a spoken multi-voice recording of each scenario (`scripts/make_audio.py`) is transcribed by
+Whisper and fed to the pipeline, so the scores include STT error. `pi evaluate` scores
+extracted event types and reconstructed state fields against hand-authored ground truth.
 
-### Synthetic cases
+### Synthetic cases (audio in)
 
 | case | profile | turns | events | event-type score | state score | drafts accepted |
 |---|---|---:|---:|:---:|:---:|:---:|
-| `case01_lapchole` | `default_or` | 30 | 27 | 11 / 11 | 5 / 5 | 3 / 3 |
-| `case02_tka_uneventful` | `default_or` | 18 | 16 | 7 / 7 | 4 / 4 | 3 / 3 |
-| `case03_trauma_exlap` | `default_or` | 20 | 32 | 10 / 10 | 3 / 3 | 3 / 3 |
-| `case04_cath_pci` | `cath_lab` | 16 | 23 | 6 / 6 | 2 / 2 | 3 / 3 |
+| `case01_lapchole` | `default_or` | 29 | 25 | 11 / 11 | 5 / 5 | 3 / 3 |
+| `case02_tka_uneventful` | `default_or` | 19 | 18 | 7 / 7 | 4 / 4 | 3 / 3 |
+| `case03_trauma_exlap` | `default_or` | 23 | 31 | 9 / 10 | 3 / 3 | 3 / 3 |
+| `case04_cath_pci` | `cath_lab` | 15 | 28 | 6 / 6 | 2 / 2 | 3 / 3 |
 
-**34 / 34** ground-truth event types found, **14 / 14** state fields correct, **12 / 12** drafts
-passed the critic with no unresolved fabrication flags.
+**33 / 34** ground-truth event types found (the one miss: an unspoken specimen hand-off in
+`case03` — the transcript says "spleen is out" but never "send to pathology"), **14 / 14**
+state fields correct, **12 / 12** drafts passed the critic with no unresolved fabrication flags.
 
 Behavioural checks these cases exist to verify:
 
@@ -181,8 +194,8 @@ Behavioural checks these cases exist to verify:
 
 The same `case01_lapchole` transcript with `--profile uk_or`: handoff switches from I-PASS to
 **SBAR**, terminal phase `handoff` to `handover`, "sponge count" to "swab count", "anesthesia"
-to "anaesthesia", and the family closing line changes. 27 events, all three drafts accepted, no
-code change.
+to "anaesthesia", and the family closing line changes. All three drafts accepted, no code
+change.
 
 ### MCP clinical context
 
@@ -198,20 +211,18 @@ mentions. The handoff then carries an `Allergies:` line the transcript-only run 
 | take | source | turns | events |
 |---|---|---:|---:|
 | `007_TKA` | machine-translated transcript | 537 | 7 |
-| `007_TKA` | raw German audio, Whisper `translate`, ffmpeg-chunked (58 min) | 446 | 10 |
 | `006_PKA` | transcript | 631 | 11 |
 | `003_TKA` | transcript | 502 | 8 |
 
-All four complete end to end with three critic-accepted drafts. Extraction is sparse because
-these transcripts are thin: patient descriptor, indication, and disposition are usually never
-stated. On the raw `007_TKA` audio the family draft misframed the case as a training simulation,
-which the translated chatter's mention of a Mako simulator step made plausible; the handoff and
-op-note held up.
+All complete end to end with three critic-accepted drafts. Extraction is sparse because these
+transcripts are thin: patient descriptor, indication, and disposition are usually never stated.
+The raw MM-OR audio is a robot-setup recording — most of the hour is calibration and draping
+chatter — so it is not in the demo set; the translated transcripts are.
 
 ### Timing
 
-~2-3 min per synthetic case, ~8-10 min for a 500-630-turn MM-OR case. The bottleneck is Groq's
-free-tier cap of **8,000 tokens per minute** per model; long transcripts need
+~1-2 min per synthetic case on Vertex AI, ~5-8 min for a 500-630-turn MM-OR transcript. On the
+Groq free tier the bottleneck is the **8,000 tokens/minute** cap; long transcripts then need
 `PI_MIN_SPACING=19 PI_WINDOW_TURNS=90`. A 429 on one draft degrades to a placeholder rather than
 crashing; `pi stage <name>` re-runs it.
 
@@ -223,7 +234,7 @@ pi/
   agents/             ingest, roles, context, extract, reduce, projections, critic
   profile.py          SiteProfile + loader
   profiles/*.json     shipped site profiles
-  llm.py              provider shim (groq / ollama / gemini) + throttle + retry
+  llm.py              provider shim (vertex / groq / gemini / ollama) + throttle + retry
   stt.py              speech-to-text backends
   mcp_client.py       minimal MCP client
   server.py           FastAPI backend
@@ -231,7 +242,7 @@ pi/
 mcp_servers/          reference clinical-context MCP server + sample records
 web/                  single-page UI, build script, baked standalone
 data/synthetic/       hand-authored cases + ground truth
-scripts/              MM-OR download helper
+scripts/              make_audio.py (scenario -> multi-voice OR audio), MM-OR download helper
 ```
 
 ## Data and PHI
@@ -249,4 +260,6 @@ anything sensitive.
 - Diarizing STT backends (AssemblyAI, Deepgram) are wired but only exercised on labelled `.srt`.
 - The MCP reference server holds three records; real matching needs a real EHR server.
 - The shipped profiles are starting points, not validated against any hospital's templates.
-- Extraction quality is bounded by the free-tier model; a larger model raises event recall.
+- Extraction quality is bounded by the model; `gemini-2.5-pro` or a larger Groq model raises
+  event recall over the defaults.
+- The demo OR audio is TTS-rendered from the scenario scripts, not real intraoperative audio.

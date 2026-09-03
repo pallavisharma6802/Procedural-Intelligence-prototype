@@ -64,6 +64,20 @@ class StateReducerAgent(Agent):
         return cf
 
 
+def _num(v) -> float | None:
+    """Best-effort number from an extractor payload value ('400', '~150 mL', 400).
+
+    Qualitative words ('minimal', 'moderate', 'none') carry no number -> None.
+    """
+    if isinstance(v, (int, float)):
+        return float(v)
+    if not isinstance(v, str):
+        return None
+    import re
+    m = re.search(r"-?\d+(?:\.\d+)?", v.replace(",", ""))
+    return float(m.group()) if m else None
+
+
 def _prov(state: CaseState, field: str, ev: ProceduralEvent) -> None:
     state.provenance.setdefault(field, [])
     if ev.id not in state.provenance[field]:
@@ -90,8 +104,10 @@ def _apply(prev: CaseState, ev: ProceduralEvent, pm: _PhaseModel) -> CaseState:
         s.meds.append(Medication(name=p.get("name", "unknown"), dose=p.get("dose"), route=p.get("route"), t_s=ev.t_start_s))
         _prov(s, "meds", ev)
     elif ev.type == EventType.blood_loss and p.get("ebl_ml") is not None:
-        s.ebl_ml = float(p["ebl_ml"])
-        _prov(s, "ebl_ml", ev)
+        ebl = _num(p["ebl_ml"])
+        if ebl is not None:
+            s.ebl_ml = ebl
+            _prov(s, "ebl_ml", ev)
     elif ev.type == EventType.transfusion:
         prod = p.get("product", "PRBC")
         units = p.get("units")

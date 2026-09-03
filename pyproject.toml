@@ -17,6 +17,7 @@ dependencies = [
 
 [project.optional-dependencies]
 local-stt = ["faster-whisper>=1.0"]   # only needed for PI_STT=local
+vertex = ["google-auth>=2.29"]        # only needed for PI_PROVIDER=vertex
 
 [project.scripts]
 pi = "pi.cli:app"

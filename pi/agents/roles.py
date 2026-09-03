@@ -1,8 +1,8 @@
-"""Map raw diarization speaker labels -> canonical clinical roles.
+"""Attribute each transcript line to a canonical clinical role.
 
 - `.srt` with explicit "SURGEON:" style prefixes  -> normalised directly, no LLM
 - diarized audio ("A"/"B"/"SPEAKER_01")           -> one LLM call over a sample per speaker
-- no speaker labels at all                        -> no-op
+- plain audio, no speaker labels                  -> one LLM call labelling every line by content
 """
 
 from __future__ import annotations
@@ -42,6 +42,17 @@ one passing instruments is a scrub nurse. If genuinely unclear, use "other".
 
 Return JSON: {{"roles": {{"<speaker id>": "<role>", ...}}}}"""
 
+SYSTEM_PERLINE = f"""You are attributing each line of an operating-room transcript to the person
+most likely saying it. Roles: {", ".join(ROLES)}.
+
+Clues: the person running the time-out / calling operative steps / asking for instruments is the
+surgeon; whoever reports blood pressure, heart rate, drugs and the airway is anesthesia; whoever
+reports instrument/sponge counts, fetches supplies and updates the room is a circulating nurse;
+whoever passes instruments is a scrub nurse. Use "other" only when there is no signal.
+
+You get numbered lines. Return JSON {{"roles": {{"0": "<role>", "1": "<role>", ...}}}} with an
+entry for every line number."""
+
 
 class RolesAgent(Agent):
     name = "roles"
@@ -51,7 +62,10 @@ class RolesAgent(Agent):
     async def run(self, cf: CaseFile) -> CaseFile:
         speakers = [t.speaker for t in cf.turns if t.speaker]
         if not speakers:
-            cf.log(self.name, "no speaker labels - skipped")
+            if cf.turns:
+                await self._infer_per_line(cf)
+            else:
+                cf.log(self.name, "no turns - skipped")
             return cf
 
         mapping: dict[str, str] = {}
@@ -72,6 +86,21 @@ class RolesAgent(Agent):
         counts = Counter(t.role for t in cf.turns if t.role)
         cf.log(self.name, f"roles: {dict(counts)}")
         return cf
+
+    async def _infer_per_line(self, cf: CaseFile) -> None:
+        lines = "\n".join(f"{i}: {t.text}" for i, t in enumerate(cf.turns))
+        user = f"CARE SETTING: {active_profile().care_setting}\n\nLINES:\n{lines}"
+        try:
+            data = await asyncio.to_thread(complete_json, SYSTEM_PERLINE, user)
+            raw = data.get("roles", {}) if isinstance(data, dict) else {}
+        except Exception as exc:  # noqa: BLE001
+            cf.log(self.name, f"per-line inference failed: {exc}")
+            return
+        for i, t in enumerate(cf.turns):
+            r = raw.get(str(i))
+            t.role = r if r in ROLES else (t.role or "other")
+        counts = Counter(t.role for t in cf.turns if t.role)
+        cf.log(self.name, f"{info()}: per-line roles {dict(counts)}")
 
     async def _infer(self, cf: CaseFile, speakers: list[str]) -> dict[str, str]:
         by_spk: dict[str, list[str]] = {s: [] for s in speakers}
